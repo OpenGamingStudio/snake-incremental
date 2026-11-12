@@ -34,7 +34,7 @@ ou utilisez le mode appareil des outils de développement du navigateur.
 Avant d'ouvrir une PR :
 
 - jouez une partie complète du début jusqu'à la première amélioration achetée, console ouverte : **aucune erreur** ;
-- si des tests existent dans `tests/`, lancez-les (`node --test tests/`) ; une logique de moteur ou d'économie
+- si des tests existent dans `tests/` (fichiers nommés `tests/*.test.js`, sinon Node les ignore), lancez-les avec Node ≥ 21 : `node --test "tests/**/*.test.js"` (glob entre guillemets) ; une logique de moteur ou d'économie
   nouvelle ou modifiée doit venir avec ses tests (le code pur, sans DOM, se teste directement avec Node) ;
 - testez avec une sauvegarde existante **et** sans sauvegarde (vider le `localStorage`).
 
