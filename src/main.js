@@ -2,7 +2,7 @@
 import { createGame, step, turn } from './engine.js';
 import { buy, appleValue, earn, gridSize, stepMs, hasWrap, COMBO_WINDOW_STEPS,
   checkAchievements, prestige, fmt } from './economy.js';
-import { load, save } from './save.js';
+import { load, save, SAVE_KEY } from './save.js';
 import { sfx, setMuted } from './audio.js';
 import { draw, renderStats, renderShop, renderAchievements, toast } from './ui.js';
 
@@ -98,7 +98,7 @@ function input(dir) {
 const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
   w: 'up', s: 'down', a: 'left', d: 'right', z: 'up', q: 'left' };
 window.addEventListener('keydown', (e) => {
-  const d = KEYS[e.key];
+  const d = KEYS[e.key.length === 1 ? e.key.toLowerCase() : e.key];
   if (d) { e.preventDefault(); input(d); }
 });
 
@@ -130,14 +130,17 @@ document.getElementById('mute').addEventListener('click', (e) => {
   save(window.localStorage, state);
 });
 document.getElementById('mute').textContent = state.muted ? '🔇' : '🔊';
+let resetting = false;
 document.getElementById('reset').addEventListener('click', () => {
   if (confirm('Effacer toute la progression ?')) {
-    window.localStorage.removeItem('snake-incremental-v1');
+    resetting = true;
+    window.localStorage.removeItem(SAVE_KEY);
     location.reload();
   }
 });
 
-setInterval(() => save(window.localStorage, state), 15000);
-window.addEventListener('beforeunload', () => save(window.localStorage, state));
+const autosave = () => { if (!resetting) save(window.localStorage, state); };
+setInterval(autosave, 15000);
+window.addEventListener('beforeunload', autosave);
 unlock(); refresh(); renderAchievements(state);
 requestAnimationFrame(frame);

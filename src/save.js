@@ -1,5 +1,5 @@
 // Sauvegarde localStorage, tolérante aux données absentes ou corrompues.
-import { newState } from './economy.js';
+import { newState, UPGRADES } from './economy.js';
 
 export const SAVE_KEY = 'snake-incremental-v1';
 
@@ -10,10 +10,13 @@ export function sanitize(raw) {
     if (k === 'levels' || k === 'achievements') continue;
     if (typeof raw[k] === typeof base[k] && (typeof raw[k] !== 'number' || Number.isFinite(raw[k]))) base[k] = raw[k];
   }
+  for (const k of ['coins', 'runEarned']) {
+    if (typeof base[k] === 'number' && base[k] < 0) base[k] = 0;
+  }
   if (raw.levels && typeof raw.levels === 'object') {
     for (const k of Object.keys(base.levels)) {
       const v = raw.levels[k];
-      if (Number.isInteger(v) && v >= 0) base.levels[k] = v;
+      if (Number.isInteger(v) && v >= 0) base.levels[k] = Math.min(v, UPGRADES[k].max);
     }
   }
   if (raw.achievements && typeof raw.achievements === 'object') {
