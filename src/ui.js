@@ -4,14 +4,14 @@ import { UPGRADES, ACHIEVEMENTS, upgradeCost, canBuy, fmt, stepMs, appleBase, co
 
 const $ = (id) => document.getElementById(id);
 
-// Couleurs lues dans les variables CSS de :root (identité unique dans style.css).
+// Couleurs lues dans les variables CSS de :root (identité unique dans src/css/input.css).
 let palette = null;
 function colors() {
   if (!palette) {
     const cs = getComputedStyle(document.documentElement);
     const v = (n) => cs.getPropertyValue(n).trim();
-    palette = { paper: v('--quadrille'), grid: v('--trait'), major: v('--mine'), ink: v('--graphite'),
-      snake: v('--chlorophylle'), apple: v('--signal'), hot: v('--laiton') };
+    palette = { paper: v('--color-quadrille'), grid: v('--color-trait'), major: v('--color-mine'), ink: v('--color-graphite'),
+      snake: v('--color-chlorophylle'), apple: v('--color-signal'), hot: v('--color-laiton') };
   }
   return palette;
 }
@@ -94,7 +94,7 @@ export function renderAchievements(s) {
   for (const a of ACHIEVEMENTS) {
     const li = document.createElement('li');
     const got = Object.hasOwn(s.achievements, a.id) && s.achievements[a.id] === true;
-    li.className = got ? 'got' : '';
+    li.className = got ? 'succes got relative py-1 pl-5' : 'succes relative py-1 pl-5 text-mine';
     li.textContent = a.name;
     el.appendChild(li);
   }
@@ -102,7 +102,7 @@ export function renderAchievements(s) {
 
 export function toast(text) {
   const t = document.createElement('div');
-  t.className = 'toast';
+  t.className = 'casual rounded-papier border-l-4 border-signal bg-graphite px-3.5 py-2 text-quadrille';
   t.textContent = text;
   $('toasts').appendChild(t);
   setTimeout(() => t.remove(), 2800);
