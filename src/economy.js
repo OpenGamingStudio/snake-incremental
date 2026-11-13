@@ -94,7 +94,7 @@ export const ACHIEVEMENTS = [
 export function checkAchievements(state) {
   const fresh = [];
   for (const a of ACHIEVEMENTS) {
-    if (!state.achievements[a.id] && a.test(state)) {
+    if (!Object.hasOwn(state.achievements, a.id) && a.test(state)) {
       state.achievements[a.id] = true;
       fresh.push(a);
     }
