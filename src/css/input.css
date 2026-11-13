@@ -1,0 +1,49 @@
+@import "tailwindcss";
+@source "../../index.html";
+@source "../ui.js";
+
+@font-face{font-family:Recursive;src:url(fonts/recursive.woff2) format("woff2");font-weight:300 1000;font-style:oblique -15deg 0deg;font-display:swap}
+
+/* Identité « papier quadrillé » : palette et typo du projet, sans dégradé. */
+@theme static {
+  --color-quadrille:#EDF0E4;
+  --color-marge:#DDE3D2;
+  --color-trait:#CBD5C0;
+  --color-graphite:#0E1A12;
+  --color-mine:#4C5A4F;
+  --color-chlorophylle:#17703A;
+  --color-signal:#B4470A;
+  --color-laiton:#8A5A00;
+  --font-sans:Recursive,sans-serif;
+  --text-compteur:clamp(2.5rem,9vw,4.5rem);
+  --text-taux:.9375rem;
+  --text-note:.8125rem;
+  --radius-papier:2px;
+}
+
+@layer base {
+  :root{color-scheme:light}
+  body{font-variation-settings:"MONO" 0,"CASL" 0;touch-action:manipulation}
+  button:disabled{cursor:default}
+  button:focus-visible,a:focus-visible{outline:2px solid var(--color-chlorophylle);outline-offset:2px}
+}
+
+@layer components {
+  .mono{font-variation-settings:"MONO" 1,"CASL" 0;font-weight:600;font-variant-numeric:tabular-nums}
+  .casual{font-variation-settings:"MONO" 0,"CASL" 1;font-weight:800}
+  .btn{background:var(--color-marge);color:var(--color-graphite);border:1px solid var(--color-graphite);border-radius:var(--radius-papier);cursor:pointer}
+  .btn:hover:not(:disabled){background:var(--color-trait)}
+  .btn:active:not(:disabled){transform:scale(.98)}
+  .upg{display:grid;grid-template-columns:1fr auto;width:100%;min-height:44px;text-align:left;padding:.55rem .5rem;column-gap:.6rem;background:var(--color-quadrille);border:0;border-bottom:1px solid var(--color-trait);cursor:pointer}
+  .upg:nth-child(even){background:var(--color-marge)}
+  .upg:hover:not(:disabled){background:var(--color-trait)}
+  .upg:disabled{color:var(--color-mine)}
+  .upg span{grid-column:1;font-size:var(--text-note);color:var(--color-mine)}
+  .upg i{grid-column:2;grid-row:1/3;align-self:center;font-style:normal;color:var(--color-mine);font-variation-settings:"MONO" 1,"CASL" 0;font-weight:600;font-variant-numeric:tabular-nums}
+  .upg:not(:disabled) i{color:var(--color-signal)}
+  .succes::before{content:"";position:absolute;left:0;top:.5rem;width:.6rem;height:.6rem;border:2px solid var(--color-mine)}
+  .succes.got{color:var(--color-graphite)}
+  .succes.got::before{background:var(--color-chlorophylle);border-color:var(--color-chlorophylle)}
+}
+
+@media (prefers-reduced-motion:reduce){.btn:active:not(:disabled){transform:none}}

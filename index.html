@@ -3,27 +3,41 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Snake Incremental – Bientôt disponible</title>
-<meta name="description" content="Snake Incremental, un jeu web open source d'OpenGamingStudio : bientôt disponible.">
-<style>
-*{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:#14151a;color:#e8e8ee;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;text-align:center;line-height:1.5}
-main{max-width:32rem}
-h1{font-size:clamp(2rem,8vw,3rem);margin:0 0 .5rem}
-p{font-size:1.125rem;margin:0 0 1.5rem;color:#b4b6c4}
-nav{display:flex;flex-wrap:wrap;gap:.75rem;justify-content:center}
-a{color:#fff;background:#2b2e3b;padding:.7rem 1.1rem;border-radius:.5rem;text-decoration:none}
-a:hover,a:focus{background:#3d4156}
-</style>
+<title>Snake Incremental</title>
+<meta name="description" content="Snake Incremental, un jeu web open source d'OpenGamingStudio : mange des pommes, améliore ton serpent, prestige.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<main>
-<h1>Snake Incremental</h1>
-<p>Bientôt disponible</p>
-<nav>
-<a href="https://github.com/OpenGamingStudio/snake-incremental">Dépôt GitHub</a>
-<a href="https://opengamingstudio.com">OpenGamingStudio</a>
-</nav>
+<header class="mx-auto max-w-[960px] px-4 pt-3 pb-1.5">
+  <h1 class="casual m-0 text-2xl text-graphite">Snake<span class="ml-1.5 text-chlorophylle">Incremental</span></h1>
+  <div class="mt-2 flex items-baseline gap-5"><span><small class="mr-1.5 text-note text-mine">Pièces</small> <b id="coins" class="mono text-compteur leading-none tracking-tight text-graphite">0</b></span><span id="combo" class="casual min-w-24 text-signal"></span>
+    <button id="mute" class="btn ml-auto px-3 py-1 text-sm" aria-label="Son" aria-pressed="false">Son</button></div>
+  <div id="info" class="mono mt-1.5 text-taux text-mine"></div>
+</header>
+<main class="mx-auto flex max-w-[960px] flex-wrap justify-center gap-6 px-4 pt-2.5 pb-8">
+  <section class="w-[min(480px,100%)]">
+    <canvas id="board" class="block aspect-square w-full touch-none border-2 border-graphite bg-quadrille" width="480" height="480" aria-label="Plateau de jeu"></canvas>
+    <div class="mt-2.5 hidden grid-cols-3 gap-1.5 pointer-coarse:grid" aria-label="Contrôles">
+      <button data-dir="up" class="btn col-start-2 flex min-h-11 justify-center p-3" aria-label="Haut"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
+      <button data-dir="left" class="btn col-start-1 row-start-2 flex min-h-11 justify-center p-3" aria-label="Gauche"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
+      <button data-dir="down" class="btn col-start-2 row-start-2 flex min-h-11 justify-center p-3" aria-label="Bas"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
+      <button data-dir="right" class="btn col-start-3 row-start-2 flex min-h-11 justify-center p-3" aria-label="Droite"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
+    </div>
+  </section>
+  <section class="max-w-105 flex-[1_1_320px]">
+    <h2 class="casual mt-6 mb-2 text-note tracking-widest text-mine uppercase">Améliorations</h2>
+    <div id="shop" class="border-t-2 border-graphite"></div>
+    <button id="prestige" class="btn mt-3 min-h-11 w-full border-laiton bg-laiton p-3 font-bold text-quadrille hover:not-disabled:bg-graphite disabled:border-trait disabled:bg-marge disabled:text-mine"></button>
+    <h2 class="casual mt-6 mb-2 text-note tracking-widest text-mine uppercase">Succès</h2>
+    <ul id="achievements" class="m-0 list-none p-0 text-[.9rem]"></ul>
+    <p class="mt-6 text-note text-mine"><button id="reset" class="btn px-2 py-1 text-note">Réinitialiser</button>
+      · <a class="text-chlorophylle" rel="noopener noreferrer" href="https://github.com/OpenGamingStudio/snake-incremental">Code (MIT)</a>
+      · <a class="text-chlorophylle" rel="noopener noreferrer" href="https://opengamingstudio.com">OpenGamingStudio</a></p>
+  </section>
 </main>
+<div id="toasts" class="pointer-events-none fixed top-2.5 left-1/2 z-10 flex -translate-x-1/2 flex-col gap-1"></div>
+<script type="module" src="src/main.js"></script>
 </body>
 </html>
