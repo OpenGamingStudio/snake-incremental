@@ -22,7 +22,7 @@ function refresh() {
 
 function unlock() {
   for (const a of checkAchievements(state)) {
-    toast('🏆 ' + a.name);
+    toast('Succès : ' + a.name);
     sfx.achieve();
     renderAchievements(state);
   }
@@ -46,7 +46,7 @@ function onPrestige() {
   const gain = prestige(state);
   if (!gain) return;
   sfx.prestige();
-  toast(`✨ +${gain} ★`);
+  toast(`Prestige : +${gain} étoile(s)`);
   resetSnake(); view.dead = false;
   unlock(); save(window.localStorage, state); refresh(); renderAchievements(state);
 }
@@ -123,13 +123,17 @@ canvas.addEventListener('mousedown', () => { if (!view.running) input(game.dir);
 document.querySelectorAll('[data-dir]').forEach((b) =>
   b.addEventListener('click', () => input(b.dataset.dir)));
 
+function setMuteLabel(b) {
+  b.textContent = state.muted ? 'Son coupé' : 'Son';
+  b.setAttribute('aria-pressed', String(state.muted));
+}
 document.getElementById('mute').addEventListener('click', (e) => {
   state.muted = !state.muted;
   setMuted(state.muted);
-  e.currentTarget.textContent = state.muted ? '🔇' : '🔊';
+  setMuteLabel(e.currentTarget);
   save(window.localStorage, state);
 });
-document.getElementById('mute').textContent = state.muted ? '🔇' : '🔊';
+setMuteLabel(document.getElementById('mute'));
 let resetting = false;
 document.getElementById('reset').addEventListener('click', () => {
   if (confirm('Effacer toute la progression ?')) {

@@ -5,23 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Snake Incremental</title>
 <meta name="description" content="Snake Incremental, un jeu web open source d'OpenGamingStudio : mange des pommes, améliore ton serpent, prestige.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
-  <h1>🐍 Snake Incremental</h1>
-  <div class="bar"><span class="coins">🪙 <b id="coins">0</b></span><span id="combo" class="combo"></span>
-    <button id="mute" aria-label="Son">🔊</button></div>
+  <h1>Snake<span>Incremental</span></h1>
+  <div class="bar"><span class="coins"><small>Pièces</small> <b id="coins">0</b></span><span id="combo" class="combo"></span>
+    <button id="mute" aria-label="Son" aria-pressed="false">Son</button></div>
   <div id="info" class="info"></div>
 </header>
 <main>
   <section class="play">
     <canvas id="board" width="480" height="480" aria-label="Plateau de jeu"></canvas>
     <div class="pad" aria-label="Contrôles">
-      <button data-dir="up" aria-label="Haut">▲</button>
-      <button data-dir="left" aria-label="Gauche">◀</button>
-      <button data-dir="down" aria-label="Bas">▼</button>
-      <button data-dir="right" aria-label="Droite">▶</button>
+      <button data-dir="up" aria-label="Haut"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
+      <button data-dir="left" aria-label="Gauche"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
+      <button data-dir="down" aria-label="Bas"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
+      <button data-dir="right" aria-label="Droite"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
     </div>
   </section>
   <section class="side">
@@ -31,8 +33,8 @@
     <h2>Succès</h2>
     <ul id="achievements"></ul>
     <p class="foot"><button id="reset">Réinitialiser</button>
-      · <a href="https://github.com/OpenGamingStudio/snake-incremental">Code (MIT)</a>
-      · <a href="https://opengamingstudio.com">OpenGamingStudio</a></p>
+      · <a rel="noopener noreferrer" href="https://github.com/OpenGamingStudio/snake-incremental">Code (MIT)</a>
+      · <a rel="noopener noreferrer" href="https://opengamingstudio.com">OpenGamingStudio</a></p>
   </section>
 </main>
 <div id="toasts"></div>
