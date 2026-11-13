@@ -10,8 +10,8 @@ function colors() {
   if (!palette) {
     const cs = getComputedStyle(document.documentElement);
     const v = (n) => cs.getPropertyValue(n).trim();
-    palette = { paper: v('--color-quadrille'), grid: v('--color-trait'), major: v('--color-mine'), ink: v('--color-graphite'),
-      snake: v('--color-chlorophylle'), apple: v('--color-signal'), hot: v('--color-laiton') };
+    palette = { paper: v('--color-quadrille'), grid: v('--color-trait'), major: v('--color-mine'), ink: v('--color-encre'),
+      snake: v('--color-chlorophylle'), apple: v('--color-framboise'), hot: v('--color-miel') };
   }
   return palette;
 }
@@ -34,15 +34,24 @@ export function draw(canvas, game, view) {
     ctx.beginPath();
     ctx.arc((game.apple.x + 0.5) * cell, (game.apple.y + 0.5) * cell, cell * 0.36, 0, Math.PI * 2);
     ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = c.ink; ctx.stroke();
   }
   const body = view.combo > 1 ? c.hot : c.snake;
+  // serpent : cases pleines à contour encre 2 px ; tête = carré encre intérieur et deux yeux
   game.snake.forEach((seg, i) => {
+    const x = seg.x * cell, y = seg.y * cell;
+    ctx.fillStyle = c.ink;
+    ctx.fillRect(x, y, cell, cell);
     ctx.fillStyle = body;
-    ctx.fillRect(seg.x * cell + 1, seg.y * cell + 1, cell - 2, cell - 2);
+    ctx.fillRect(x + 2, y + 2, cell - 4, cell - 4);
     if (i === 0) {
       ctx.fillStyle = c.ink;
-      const m = cell * 0.3;
-      ctx.fillRect(seg.x * cell + m, seg.y * cell + m, cell - 2 * m, cell - 2 * m);
+      const m = cell * 0.22;
+      ctx.fillRect(x + m, y + m, cell - 2 * m, cell - 2 * m);
+      ctx.fillStyle = c.paper;
+      const e = Math.max(2, cell * 0.14);
+      ctx.fillRect(x + cell * 0.3, y + cell * 0.36, e, e);
+      ctx.fillRect(x + cell * 0.7 - e, y + cell * 0.36, e, e);
     }
   });
   if (!view.running) {
@@ -50,7 +59,7 @@ export function draw(canvas, game, view) {
     ctx.fillStyle = c.ink;
     ctx.fillRect(0, (px - bh) / 2, px, bh);
     ctx.fillStyle = c.paper;
-    ctx.font = `800 ${px / 16}px Recursive,sans-serif`;
+    ctx.font = `700 ${px / 16}px Fredoka,sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(view.dead ? 'Perdu. Touche ou glisse' : 'Touche, glisse ou flèches', px / 2, px / 2);
@@ -59,7 +68,9 @@ export function draw(canvas, game, view) {
 
 export function renderStats(s, view) {
   $('coins').textContent = fmt(s.coins);
-  $('combo').textContent = view.combo > 1 ? `Combo x${view.combo}` : '';
+  const combo = $('combo');
+  combo.textContent = view.combo > 1 ? `Combo ×${view.combo}` : '';
+  combo.classList.toggle('tampon', view.combo > 1);
   $('info').textContent = `Pomme ${fmt(appleBase(s) * starMult(s))} · Combo +${Math.round(comboBonus(s) * 100)} %/pomme · ` +
     `${(1000 / stepMs(s)).toFixed(1)} pas/s · Étoiles ${s.stars} (x${starMult(s).toFixed(1)})`;
 }
@@ -70,16 +81,32 @@ export function renderShop(s, onBuy, onPrestige) {
   for (const id of Object.keys(UPGRADES)) {
     const u = UPGRADES[id];
     const lvl = s.levels[id];
-    const b = document.createElement('button');
-    b.className = 'upg';
     const maxed = lvl >= u.max;
+    const cost = maxed ? 0 : upgradeCost(id, lvl);
+    // une ligne du registre : nom ×niveau, effet, coût aligné à droite, bouton « Acheter »
+    const row = document.createElement('div');
+    row.className = 'upg';
+    const name = document.createElement('b');
+    name.textContent = u.name;
+    const level = document.createElement('span');
+    level.className = 'lvl';
+    level.textContent = `×${lvl}`;
+    name.appendChild(level);
+    const desc = document.createElement('span');
+    desc.className = 'desc';
+    desc.textContent = u.desc;
+    const price = document.createElement('span');
+    price.className = 'cost';
+    price.textContent = maxed ? 'MAX' : fmt(cost);
+    const b = document.createElement('button');
+    b.className = 'btn buy';
     b.disabled = !canBuy(s, id);
-    for (const tag of ['b', 'span', 'i']) b.appendChild(document.createElement(tag));
-    b.children[0].textContent = `${u.name} (niv. ${lvl}${maxed ? ' MAX' : ''})`;
-    b.children[1].textContent = u.desc;
-    b.children[2].textContent = maxed ? '—' : fmt(upgradeCost(id, lvl));
+    // achat impossible : le coût manquant s'affiche, pas seulement un bouton grisé
+    b.textContent = maxed ? 'Complet' : b.disabled ? `manque ${fmt(cost - s.coins)}` : 'Acheter';
+    b.setAttribute('aria-label', maxed ? `${u.name} : niveau maximum` : `Acheter ${u.name} pour ${fmt(cost)} pièces`);
     b.addEventListener('click', () => onBuy(id));
-    shop.appendChild(b);
+    row.append(name, desc, price, b);
+    shop.appendChild(row);
   }
   const gain = prestigeGain(s);
   const p = $('prestige');
@@ -94,7 +121,7 @@ export function renderAchievements(s) {
   for (const a of ACHIEVEMENTS) {
     const li = document.createElement('li');
     const got = Object.hasOwn(s.achievements, a.id) && s.achievements[a.id] === true;
-    li.className = got ? 'succes got relative py-1 pl-5' : 'succes relative py-1 pl-5 text-mine';
+    li.className = got ? 'succes got relative py-1 pl-6' : 'succes relative py-1 pl-6 text-mine';
     li.textContent = a.name;
     el.appendChild(li);
   }
@@ -102,7 +129,7 @@ export function renderAchievements(s) {
 
 export function toast(text) {
   const t = document.createElement('div');
-  t.className = 'casual rounded-papier border-l-4 border-signal bg-graphite px-3.5 py-2 text-quadrille';
+  t.className = 'casual tampon motion-safe-only animate-tampon text-ligne shadow-dure';
   t.textContent = text;
   $('toasts').appendChild(t);
   setTimeout(() => t.remove(), 2800);
