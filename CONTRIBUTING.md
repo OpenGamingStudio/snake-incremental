@@ -87,3 +87,16 @@ Si vous devez déroger à cette organisation, expliquez pourquoi dans la PR.
 ## Licence
 
 En contribuant, vous acceptez que votre code soit publié sous licence [MIT](LICENSE).
+
+## Tri des contributions
+
+Chaque issue et chaque PR passe par un tri avant d'être étudiée par l'équipe.
+
+1. **Accusé de réception** sous environ 1 h, avec l'étiquette `triage:en-cours`.
+2. **Tri** sur trois critères :
+   - **cohérence** : la contribution respecte l'esprit du jeu et les règles de ce fichier ;
+   - **pertinence** : elle apporte quelque chose d'utile et ne fait pas doublon ;
+   - **fonctionnement** : le jeu se lance et reste jouable (navigateur et mobile).
+3. **Décision** :
+   - `triage:valide` : la contribution passe ensuite à la validation par les développeurs du studio ;
+   - `triage:rejete` : un commentaire en donne le motif, puis l'issue ou la PR est fermée.
