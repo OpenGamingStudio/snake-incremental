@@ -50,7 +50,7 @@ export function draw(canvas, game, view) {
     ctx.fillStyle = c.ink;
     ctx.fillRect(0, (px - bh) / 2, px, bh);
     ctx.fillStyle = c.paper;
-    ctx.font = `800 ${px / 16}px Recursive,sans-serif`;
+    ctx.font = `700 ${px / 16}px Fredoka,sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(view.dead ? 'Perdu. Touche ou glisse' : 'Touche, glisse ou flèches', px / 2, px / 2);

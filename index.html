@@ -7,37 +7,38 @@
 <meta name="description" content="Snake Incremental, un jeu web open source d'OpenGamingStudio : mange des pommes, améliore ton serpent, prestige.">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
+<link rel="preload" href="fonts/fredoka.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="mx-auto max-w-[960px] px-4 pt-3 pb-1.5">
   <h1 class="casual m-0 text-2xl text-graphite">Snake<span class="ml-1.5 text-chlorophylle">Incremental</span></h1>
-  <div class="mt-2 flex items-baseline gap-5"><span><small class="mr-1.5 text-note text-mine">Pièces</small> <b id="coins" class="mono text-compteur leading-none tracking-tight text-graphite">0</b></span><span id="combo" class="casual min-w-24 text-signal"></span>
-    <button id="mute" class="btn ml-auto px-3 py-1 text-sm" aria-label="Son" aria-pressed="false">Son</button></div>
+  <div class="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1"><span><small class="mr-1.5 text-note text-mine">Pièces</small> <b id="coins" class="mono text-compteur leading-none tracking-tight text-graphite">0</b></span><span id="combo" class="casual min-w-24 text-signal" aria-live="polite"></span>
+    <button id="mute" class="btn ml-auto min-h-11 min-w-11 px-4 text-sm" aria-label="Son" aria-pressed="false">Son</button></div>
   <div id="info" class="mono mt-1.5 text-taux text-mine"></div>
 </header>
 <main class="mx-auto flex max-w-[960px] flex-wrap justify-center gap-6 px-4 pt-2.5 pb-8">
   <section class="w-[min(480px,100%)]">
     <canvas id="board" class="block aspect-square w-full touch-none border-2 border-graphite bg-quadrille" width="480" height="480" aria-label="Plateau de jeu"></canvas>
-    <div class="mt-2.5 hidden grid-cols-3 gap-1.5 pointer-coarse:grid" aria-label="Contrôles">
-      <button data-dir="up" class="btn col-start-2 flex min-h-11 justify-center p-3" aria-label="Haut"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
-      <button data-dir="left" class="btn col-start-1 row-start-2 flex min-h-11 justify-center p-3" aria-label="Gauche"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
-      <button data-dir="down" class="btn col-start-2 row-start-2 flex min-h-11 justify-center p-3" aria-label="Bas"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
-      <button data-dir="right" class="btn col-start-3 row-start-2 flex min-h-11 justify-center p-3" aria-label="Droite"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
+    <div class="mt-2.5 hidden grid-cols-3 gap-2 pointer-coarse:grid [@media(any-pointer:coarse)]:grid" aria-label="Contrôles">
+      <button data-dir="up" class="btn col-start-2 flex min-h-14 justify-center p-3" aria-label="Haut"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
+      <button data-dir="left" class="btn col-start-1 row-start-2 flex min-h-14 justify-center p-3" aria-label="Gauche"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
+      <button data-dir="down" class="btn col-start-2 row-start-2 flex min-h-14 justify-center p-3" aria-label="Bas"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
+      <button data-dir="right" class="btn col-start-3 row-start-2 flex min-h-14 justify-center p-3" aria-label="Droite"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
     </div>
   </section>
-  <section class="max-w-105 flex-[1_1_320px]">
+  <section class="w-full max-w-105 min-w-0 md:flex-[1_1_320px]">
     <h2 class="casual mt-6 mb-2 text-note tracking-widest text-mine uppercase">Améliorations</h2>
     <div id="shop" class="border-t-2 border-graphite"></div>
     <button id="prestige" class="btn mt-3 min-h-11 w-full border-laiton bg-laiton p-3 font-bold text-quadrille hover:not-disabled:bg-graphite disabled:border-trait disabled:bg-marge disabled:text-mine"></button>
     <h2 class="casual mt-6 mb-2 text-note tracking-widest text-mine uppercase">Succès</h2>
     <ul id="achievements" class="m-0 list-none p-0 text-[.9rem]"></ul>
-    <p class="mt-6 text-note text-mine"><button id="reset" class="btn px-2 py-1 text-note">Réinitialiser</button>
-      · <a class="text-chlorophylle" rel="noopener noreferrer" href="https://github.com/OpenGamingStudio/snake-incremental">Code (MIT)</a>
-      · <a class="text-chlorophylle" rel="noopener noreferrer" href="https://opengamingstudio.com">OpenGamingStudio</a></p>
+    <p class="mt-6 flex flex-wrap items-center gap-x-3 text-note text-mine"><button id="reset" class="btn min-h-11 px-3 text-note">Réinitialiser</button>
+      <a class="inline-flex min-h-11 items-center text-chlorophylle underline" rel="noopener noreferrer" href="https://github.com/OpenGamingStudio/snake-incremental">Code (MIT)</a>
+      <a class="inline-flex min-h-11 items-center text-chlorophylle underline" rel="noopener noreferrer" href="https://opengamingstudio.com">OpenGamingStudio</a></p>
   </section>
 </main>
-<div id="toasts" class="pointer-events-none fixed top-2.5 left-1/2 z-10 flex -translate-x-1/2 flex-col gap-1"></div>
+<div id="toasts" class="pointer-events-none fixed top-2.5 left-1/2 z-10 flex w-max max-w-[calc(100vw-1rem)] -translate-x-1/2 flex-col gap-1"></div>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>
