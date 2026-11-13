@@ -16,7 +16,7 @@ Move the snake (arrows, WASD, swipe or on-screen pad), eat apples for coins, cha
 
 ## Développement / Development
 
-Site statique sans build : `python3 -m http.server 8000` puis http://localhost:8000. Structure : `src/engine.js` (snake), `src/economy.js` (améliorations, prestige, succès), `src/save.js`, `src/audio.js`, `src/ui.js`, `src/main.js` (boucle et entrées). Tests : `npm test` (`node --test tests/`, Node ≥ 18).
+Site statique sans build : `python3 -m http.server 8000` puis http://localhost:8000. Structure : `src/engine.js` (snake), `src/economy.js` (améliorations, prestige, succès), `src/save.js`, `src/audio.js`, `src/ui.js`, `src/main.js` (boucle et entrées). Tests : `npm test` (`node --test`, Node ≥ 18 ; découvre `tests/*.test.js`).
 
 ## Contribuer / Contributing
 
@@ -25,7 +25,7 @@ Issues and pull requests are welcome. Contributions are checked (consistency, re
 
 ## Styles (Tailwind CSS)
 
-Le socle de styles est Tailwind CSS v4.3 (palette et typo du projet dans `src/css/input.css`, `@theme`). Le site est statique : `style.css` est généré et commité. Après toute modification du HTML, de `src/ui.js` ou de `src/css/input.css` :
+Le socle de styles est Tailwind CSS v4.3.5 (palette et typo du projet dans `src/css/input.css`, `@theme`). Le site est statique : `style.css` est généré et commité. Après toute modification du HTML, de `src/ui.js` ou de `src/css/input.css` :
 
 ```
 tailwindcss -i src/css/input.css -o style.css --minify
