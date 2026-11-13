@@ -4,7 +4,7 @@ Un snake incrémental addictif, plein de récompenses et de progression. Jouable
 
 An addictive incremental snake game full of rewards and progression. Playable in the browser and on mobile.
 
-- Jouer / Play : https://snake-incremental.opengamingstudio.com (bientôt / soon)
+- Jouer / Play : https://snake.opengamingstudio.com (bientôt / soon)
 - Licence : [MIT](LICENSE)
 - Projet de [OpenGamingStudio](https://github.com/OpenGamingStudio), studio de jeux web open source.
 
