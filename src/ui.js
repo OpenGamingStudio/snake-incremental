@@ -189,9 +189,9 @@ export function renderShop(s, onBuy, rate, combo) {
     if (!maxed) {
       r.btn.textContent = `Acheter · ${short(cost)}`;
       r.btn.setAttribute('aria-disabled', String(!can));
-      r.btn.setAttribute('aria-label', can
-        ? `Acheter ${u.name}, niveau ${lvl + 1}, ${short(cost)} pièces`
-        : `${u.name}, niveau ${lvl + 1}, ${short(cost)} pièces : manque ${short(cost - s.coins)}`);
+      // le nom accessible commence par le texte visible (WCAG 2.5.3)
+      r.btn.setAttribute('aria-label', `Acheter · ${short(cost)} pièces : ${u.name}, niveau ${lvl + 1}`
+        + (can ? '' : `, manque ${short(Math.ceil(cost - s.coins))}`));
       if (!can) {
         r.missing.textContent = `manque ${short(Math.ceil(cost - s.coins))}`;
         r.fill.style.transform = `scaleX(${Math.max(0, Math.min(1, s.coins / cost)).toFixed(3)})`;

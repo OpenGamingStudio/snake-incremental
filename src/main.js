@@ -1,5 +1,5 @@
 // Boucle de jeu, entrées clavier / tactile, dialogues, assemblage des modules.
-import { createGame, step, turn, DIRS } from './engine.js';
+import { createGame, step, turn } from './engine.js';
 import { buy, appleValue, earn, gridSize, stepMs, hasWrap, COMBO_WINDOW_STEPS,
   checkAchievements, prestige, UPGRADES } from './economy.js';
 import { load, save, SAVE_KEY } from './save.js';
@@ -122,8 +122,6 @@ function onBuy(id) {
 }
 
 function tick() {
-  const head = game.snake[0];
-  const d = DIRS[game.queue.length ? game.queue[0] : game.dir];
   const r = step(game, Math.random, hasWrap(state));
   view.sinceApple++;
   if (r.ate) {
@@ -148,8 +146,7 @@ function tick() {
     refresh();
   }
   if (r.died) {
-    const x = head.x + d.x, y = head.y + d.y;
-    die(x < 0 || y < 0 || x >= game.size || y >= game.size ? 'Mur !' : 'Queue !');
+    die(r.hit === 'wall' ? 'Mur !' : 'Queue !');
   } else if (r.won) {
     unlock();
     save(window.localStorage, state);

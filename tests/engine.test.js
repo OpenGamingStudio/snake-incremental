@@ -35,3 +35,18 @@ test('la queue libérée ne tue pas', () => {
   g.dir = 'up'; turn(g, 'right');
   assert.equal(step(g).died, false);
 });
+
+test('la cause de la mort : mur ou queue, même après un bord traversé', () => {
+  const mur = createGame(8);
+  mur.snake = [{x:0,y:3},{x:1,y:3}];
+  mur.dir = 'left'; mur.apple = null;
+  assert.equal(step(mur).hit, 'wall');
+
+  // murs traversants : la tête sort à gauche, rentre à droite et touche son corps
+  const g = createGame(8);
+  g.snake = [{x:0,y:3},{x:0,y:4},{x:7,y:4},{x:7,y:3},{x:7,y:2},{x:6,y:2}];
+  g.dir = 'left'; g.apple = null;
+  const r = step(g, Math.random, true);
+  assert.equal(r.died, true);
+  assert.equal(r.hit, 'tail');
+});

@@ -125,7 +125,7 @@
   .upg-effet{grid-area:effet;font-weight:600;color:var(--color-encre)}
   .upg-retour{grid-area:retour;font-size:var(--text-note);color:var(--color-mine)}
   .upg-achat{grid-area:achat;display:grid;gap:.3rem;min-width:0}
-  .buy{min-height:48px;width:100%;background:var(--color-framboise);color:#fff;font-variant-numeric:tabular-nums}
+  .buy{min-height:48px;width:100%;padding:0 .5rem;white-space:nowrap;background:var(--color-framboise);color:#fff;font-variant-numeric:tabular-nums}
   .manque{font-size:var(--text-note);color:var(--color-mine);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
   .jauge{height:4px;background:var(--color-marge);outline:1px solid var(--color-mine);overflow:hidden}
   .upg:nth-child(even) .jauge{background:var(--color-quadrille)}
@@ -181,13 +181,15 @@
   .unite,.meilleur,.taux{display:none}
   .sous-ligne{flex-wrap:nowrap;gap:.5rem}
   .combo{min-width:0}
-  .upg{grid-template-areas:"nom niveau" "effet achat" "retour achat";grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  /* la colonne d'achat suit le bouton, qui tient toujours sur une ligne */
+  .upg{grid-template-areas:"nom niveau" "effet achat" "retour achat";grid-template-columns:minmax(0,1fr) auto}
+  .buy{min-width:8.75rem}
   .upg-niveau{justify-self:end}
 }
 
 /* 600+ : registre en tableau d'une rangée */
 @media (min-width:600px){
-  .upg{grid-template-columns:minmax(0,1.5fr) 4.5rem minmax(0,1.1fr) minmax(0,1fr) 10rem;grid-template-areas:"nom niveau effet retour achat"}
+  .upg{grid-template-columns:minmax(0,1.5fr) 4.5rem minmax(0,1.1fr) minmax(0,1fr) 10.5rem;grid-template-areas:"nom niveau effet retour achat"}
   .toasts{top:auto;bottom:1rem;left:1rem;transform:none;align-items:flex-start}
 }
 
