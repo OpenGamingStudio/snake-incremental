@@ -2,44 +2,116 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Snake Incremental</title>
-<meta name="description" content="Snake Incremental, un jeu web open source d'OpenGamingStudio : mange des pommes, améliore ton serpent, prestige.">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="description" content="Snake Incremental, un jeu web open source d'OpenGamingStudio : mange des pommes, améliore ton serpent, recommence plus fort.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="theme-color" content="#2E9E4A">
 <meta name="referrer" content="no-referrer">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preload" href="fonts/fredoka.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="mx-auto max-w-[960px] px-4 pt-3 pb-1.5">
-  <div class="flex items-center gap-3"><h1 class="casual m-0 text-[clamp(1.5rem,6vw,2.25rem)] leading-tight text-encre"><span class="logo">Snake</span> Incremental</h1>
-    <button id="mute" class="btn ml-auto min-h-11 min-w-11 px-4 text-base" aria-label="Son" aria-pressed="false">Son</button></div>
-  <div class="mt-3 flex flex-wrap items-end gap-x-5 gap-y-2"><span class="flex items-baseline gap-2"><b id="coins" class="casual text-compteur leading-none tabular-nums text-encre">0</b><small class="casual text-taux text-foret">pièces</small></span><span id="combo" class="casual text-palier leading-none" aria-live="polite"></span></div>
-  <div id="info" class="mono mt-2 text-taux text-mine"></div>
+<header class="entete">
+  <h1 class="logo-mot">Snake Incremental</h1>
+  <button id="mute" class="btn btn-ico" aria-label="Son" aria-pressed="true"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l6-5v16l-6-5H3z"/><path class="onde" d="M16 8.5h2.5v7H16z"/><path class="onde" d="M20 6h2v12h-2z"/><path class="barre" d="M15 9.4 16.4 8 23 14.6 21.6 16z"/></svg></button>
+  <button id="optBtn" class="btn btn-ico" aria-label="Options" aria-haspopup="dialog"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v3H3zM3 10.5h18v3H3zM3 16h18v3H3z"/><path class="curseur" d="M6 3.5h4v6H6zM14 9h4v6h-4zM8 14.5h4v6H8z"/></svg></button>
 </header>
-<main class="mx-auto flex max-w-[960px] flex-wrap justify-center gap-6 px-4 pt-2.5 pb-8">
-  <section class="w-[min(480px,100%)]">
-    <canvas id="board" class="block aspect-square w-full touch-none rounded-plateau border-3 border-encre bg-quadrille shadow-dure" width="480" height="480" aria-label="Plateau de jeu"></canvas>
-    <div class="mt-4 hidden grid-cols-3 gap-2.5 pointer-coarse:grid [@media(any-pointer:coarse)]:grid" aria-label="Contrôles">
-      <button data-dir="up" class="btn pad col-start-2 flex min-h-14 justify-center p-3" aria-label="Haut"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
-      <button data-dir="left" class="btn pad col-start-1 row-start-2 flex min-h-14 justify-center p-3" aria-label="Gauche"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
-      <button data-dir="down" class="btn pad col-start-2 row-start-2 flex min-h-14 justify-center p-3" aria-label="Bas"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
-      <button data-dir="right" class="btn pad col-start-3 row-start-2 flex min-h-14 justify-center p-3" aria-label="Droite"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg></button>
+
+<main id="app" class="page">
+  <section class="zone-compteur" aria-label="Pièces">
+    <div class="bandeau">
+      <p class="pieces"><span id="coins" class="chiffres" aria-hidden="true"></span><span id="coinsTxt" class="sr-only">0 pièce</span><span class="unite" aria-hidden="true">pièces</span><span id="fly" class="vol" aria-hidden="true"></span></p>
+      <p class="sous-ligne"><span id="combo" class="combo">Combo ×0</span><span id="best" class="meilleur">meilleur ×0</span><span id="stars" class="etoiles"><svg class="ico-etoile" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 7 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.4 21.8l1.8-7.3L1.5 9.6 9 9z"/></svg><span id="starsTxt">0</span></span></p>
+    </div>
+    <p id="info" class="taux"></p>
+    <p id="annonce" class="sr-only" aria-live="polite"></p>
+  </section>
+
+  <section class="zone-plateau" aria-label="Plateau">
+    <div class="cadre">
+      <canvas id="board" class="plateau" width="480" height="480" role="img" aria-label="Plateau de jeu, partie non commencée"></canvas>
+      <div id="voile" class="voile">
+        <div class="carton">
+          <p id="voileTitre" class="carton-titre">Snake Incremental</p>
+          <p id="voileTexte" class="carton-texte" role="status">Flèches, ZQSD ou balayez pour diriger.</p>
+          <button id="voileBtn" class="btn btn-fort">Jouer</button>
+        </div>
+      </div>
+    </div>
+    <div id="croix" class="croix" role="group" aria-label="Croix directionnelle">
+      <button data-dir="up" class="btn pad pad-h" aria-label="Haut"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l9 12H3z"/></svg></button>
+      <button data-dir="left" class="btn pad pad-g" aria-label="Gauche"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l12-9v18z"/></svg></button>
+      <button data-dir="down" class="btn pad pad-b" aria-label="Bas"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20L3 8h18z"/></svg></button>
+      <button data-dir="right" class="btn pad pad-d" aria-label="Droite"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12L8 21V3z"/></svg></button>
     </div>
   </section>
-  <section class="w-full max-w-105 min-w-0 md:flex-[1_1_320px]">
-    <h2 class="casual mt-2 mb-3 inline-block -rotate-2 text-palier leading-none text-encre">Registre</h2>
+
+  <section class="zone-registre" aria-labelledby="tRegistre">
+    <div class="registre-tete">
+      <h2 id="tRegistre" class="titre">Registre</h2>
+      <div class="filtre" role="group" aria-label="Filtrer les améliorations">
+        <button id="fAll" class="btn btn-filtre" aria-pressed="true">Tout</button>
+        <button id="fBuy" class="btn btn-filtre" aria-pressed="false">Achetable</button>
+      </div>
+    </div>
     <div id="shop" class="registre"></div>
-    <button id="prestige" class="btn prestige mt-4 min-h-12 w-full p-3 text-ligne"></button>
-    <h2 class="casual mt-8 mb-2 text-[1.5rem] text-encre">Succès</h2>
-    <ul id="achievements" class="m-0 list-none p-0 text-[.9rem]"></ul>
-    <p class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-note text-mine"><button id="reset" class="btn min-h-11 px-3 text-note">Réinitialiser</button>
-      <a class="inline-flex min-h-11 items-center font-semibold text-foret underline decoration-2" rel="noopener noreferrer" href="https://github.com/OpenGamingStudio/snake-incremental">Code (MIT)</a>
-      <a class="inline-flex min-h-11 items-center font-semibold text-foret underline decoration-2" rel="noopener noreferrer" href="https://opengamingstudio.com">OpenGamingStudio</a></p>
+    <p id="shopVide" class="note-vide" hidden>Rien d'achetable pour l'instant : mangez des pommes.</p>
+    <div class="prestige-bloc">
+      <p id="prestigeTxt" class="prestige-txt"></p>
+      <button id="prestige" class="btn btn-prestige" aria-haspopup="dialog">Recommencer plus fort</button>
+      <p id="prestigeRaison" class="raison"></p>
+    </div>
+  </section>
+
+  <section class="zone-succes" aria-labelledby="tSucces">
+    <h2 id="tSucces" class="titre">Succès <span id="succesN" class="titre-n"></span></h2>
+    <ul id="achievements" class="tampons"></ul>
   </section>
 </main>
-<div id="toasts" class="pointer-events-none fixed top-2.5 left-1/2 z-10 flex w-max max-w-[calc(100vw-1rem)] -translate-x-1/2 flex-col items-center gap-2"></div>
+
+<footer class="pied">
+  <button id="reset" class="lien-btn">Réinitialiser la sauvegarde</button>
+  <a class="lien" rel="noopener noreferrer" href="https://github.com/OpenGamingStudio/snake-incremental">Code source, licence MIT</a>
+  <a class="lien" rel="noopener noreferrer" href="https://opengamingstudio.com">opengamingstudio.com</a>
+</footer>
+
+<dialog id="dlgPrestige" class="dlg" aria-labelledby="dlgPrestigeT">
+  <h2 id="dlgPrestigeT" class="dlg-titre">Recommencer plus fort ?</h2>
+  <p id="dlgPrestigeTxt" class="dlg-texte"></p>
+  <div class="dlg-actions">
+    <button id="prestigeNo" class="btn" autofocus>Pas encore</button>
+    <button id="prestigeYes" class="btn btn-fort">Recommencer plus fort</button>
+  </div>
+</dialog>
+
+<dialog id="dlgReset" class="dlg" aria-labelledby="dlgResetT">
+  <h2 id="dlgResetT" class="dlg-titre">Réinitialiser la sauvegarde ?</h2>
+  <p id="dlgResetTxt" class="dlg-texte">Pièces, améliorations, étoiles et succès seront effacés de ce navigateur.</p>
+  <div class="dlg-actions">
+    <button id="resetNo" class="btn" autofocus>Annuler</button>
+    <button id="resetYes" class="btn btn-danger">Tout effacer</button>
+  </div>
+</dialog>
+
+<dialog id="dlgOptions" class="dlg" aria-labelledby="dlgOptionsT">
+  <h2 id="dlgOptionsT" class="dlg-titre">Options</h2>
+  <div class="options">
+    <div class="option"><span id="oSonL">Son</span><button id="oSon" class="btn btn-bascule" role="switch" aria-checked="true" aria-labelledby="oSonL">Activé</button></div>
+    <div class="option"><span id="oVibL">Vibrations</span><button id="oVib" class="btn btn-bascule" role="switch" aria-checked="true" aria-labelledby="oVibL">Activées</button></div>
+    <div class="option"><label for="oNote">Notation</label><select id="oNote" class="choix"><option value="courte">1,2 k</option><option value="sci">1,2e3</option></select></div>
+    <div class="option"><label for="oPad">Contrôles tactiles</label><select id="oPad" class="choix"><option value="auto">Automatique</option><option value="on">Afficher</option><option value="off">Masquer</option></select></div>
+  </div>
+  <div class="dlg-actions">
+    <button id="optClose" class="btn btn-fort">Fermer</button>
+  </div>
+</dialog>
+
+<div id="toasts" class="toasts" role="status"></div>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>
