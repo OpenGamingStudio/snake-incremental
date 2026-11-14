@@ -47,14 +47,14 @@ export function step(game, rng = Math.random, wrap = false) {
     y = (y + game.size) % game.size;
   } else if (x < 0 || y < 0 || x >= game.size || y >= game.size) {
     game.alive = false;
-    return { ate: false, died: true, won: false };
+    return { ate: false, died: true, won: false, hit: 'wall' };
   }
   const ate = !!game.apple && game.apple.x === x && game.apple.y === y;
   // la queue va se libérer sauf si on mange : on l'exclut de la collision
   const body = ate ? game.snake : game.snake.slice(0, -1);
   if (body.some((c) => c.x === x && c.y === y)) {
     game.alive = false;
-    return { ate: false, died: true, won: false };
+    return { ate: false, died: true, won: false, hit: 'tail' };
   }
   game.snake.unshift({ x, y });
   if (!ate) game.snake.pop();
