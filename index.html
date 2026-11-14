@@ -16,8 +16,10 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<a class="skip" href="#app">Aller au jeu</a>
 <header class="entete">
   <h1 class="logo-mot">Snake Incremental</h1>
+  <button id="pauseBtn" class="btn btn-ico" aria-label="Pause" aria-pressed="false"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path class="p-pause" d="M6 4h4v16H6zM14 4h4v16h-4z"/><path class="p-play" d="M7 3l13 9-13 9z"/></svg></button>
   <button id="mute" class="btn btn-ico" aria-label="Son" aria-pressed="true"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l6-5v16l-6-5H3z"/><path class="onde" d="M16 8.5h2.5v7H16z"/><path class="onde" d="M20 6h2v12h-2z"/><path class="barre" d="M15 9.4 16.4 8 23 14.6 21.6 16z"/></svg></button>
   <button id="optBtn" class="btn btn-ico" aria-label="Options" aria-haspopup="dialog"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v3H3zM3 10.5h18v3H3zM3 16h18v3H3z"/><path class="curseur" d="M6 3.5h4v6H6zM14 9h4v6h-4zM8 14.5h4v6H8z"/></svg></button>
 </header>
@@ -28,8 +30,8 @@
       <p class="pieces"><span id="coins" class="chiffres" aria-hidden="true"></span><span id="coinsTxt" class="sr-only">0 pièce</span><span class="unite" aria-hidden="true">pièces</span><span id="fly" class="vol" aria-hidden="true"></span></p>
       <p class="sous-ligne"><span id="combo" class="combo">Combo ×0</span><span id="best" class="meilleur">meilleur ×0</span><span id="stars" class="etoiles"><svg class="ico-etoile" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 7 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.4 21.8l1.8-7.3L1.5 9.6 9 9z"/></svg><span id="starsTxt">0</span></span></p>
     </div>
-    <p id="info" class="taux"></p>
-    <p id="annonce" class="sr-only" aria-live="polite"></p>
+    <p id="info" class="taux"><span id="infoVis" aria-hidden="true"></span><span id="infoSr" class="sr-only"></span></p>
+    <p id="annonce" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
   </section>
 
   <section class="zone-plateau" aria-label="Plateau">
@@ -38,7 +40,7 @@
       <div id="voile" class="voile">
         <div class="carton">
           <p id="voileTitre" class="carton-titre">Snake Incremental</p>
-          <p id="voileTexte" class="carton-texte" role="status">Flèches, ZQSD ou balayez pour diriger.</p>
+          <p id="voileTexte" class="carton-texte">Flèches, ZQSD ou balayez pour diriger.</p>
           <button id="voileBtn" class="btn btn-fort">Jouer</button>
         </div>
       </div>
@@ -59,7 +61,7 @@
         <button id="fBuy" class="btn btn-filtre" aria-pressed="false">Achetable</button>
       </div>
     </div>
-    <div id="shop" class="registre"></div>
+    <div id="shop" class="registre" role="list" aria-labelledby="tRegistre"></div>
     <p id="shopVide" class="note-vide" hidden>Rien d'achetable pour l'instant : mangez des pommes.</p>
     <div class="prestige-bloc">
       <p id="prestigeTxt" class="prestige-txt"></p>
@@ -101,10 +103,26 @@
 <dialog id="dlgOptions" class="dlg" aria-labelledby="dlgOptionsT">
   <h2 id="dlgOptionsT" class="dlg-titre">Options</h2>
   <div class="options">
+    <h3 class="dlg-sous">Son et vibrations</h3>
     <div class="option"><span id="oSonL">Son</span><button id="oSon" class="btn btn-bascule" role="switch" aria-checked="true" aria-labelledby="oSonL">Activé</button></div>
+    <div class="option"><label for="oVol">Volume</label><span class="curseur-vol"><input id="oVol" type="range" min="0" max="100" step="5" value="100" aria-describedby="oVolV"><output id="oVolV" for="oVol">100 %</output></span></div>
     <div class="option"><span id="oVibL">Vibrations</span><button id="oVib" class="btn btn-bascule" role="switch" aria-checked="true" aria-labelledby="oVibL">Activées</button></div>
+    <h3 class="dlg-sous">Accessibilité</h3>
+    <div class="option"><label for="oVit">Vitesse du serpent</label><select id="oVit" class="choix"><option value="1">Normale</option><option value="0.75">Lente (75 %)</option><option value="0.5">Très lente (50 %)</option><option value="0.35">Minimale (35 %)</option></select></div>
+    <div class="option"><span id="oAssL">Mode assisté</span><button id="oAss" class="btn btn-bascule" role="switch" aria-checked="false" aria-labelledby="oAssL" aria-describedby="oAssD">Désactivé</button></div>
+    <p id="oAssD" class="raison">Les murs se traversent et se cogner contre sa queue la raccourcit au lieu de perdre.</p>
+    <div class="option"><span id="oDaltL">Mode daltonien</span><button id="oDalt" class="btn btn-bascule" role="switch" aria-checked="false" aria-labelledby="oDaltL">Désactivé</button></div>
+    <div class="option"><label for="oCalme">Animations</label><select id="oCalme" class="choix"><option value="auto">Selon le système</option><option value="on">Réduites</option></select></div>
+    <div class="option"><label for="oTexte">Taille du texte</label><select id="oTexte" class="choix"><option value="100">Normale</option><option value="125">Grande (125 %)</option><option value="150">Très grande (150 %)</option></select></div>
+    <div class="option"><span id="oAnnL">Annoncer chaque pomme</span><button id="oAnn" class="btn btn-bascule" role="switch" aria-checked="false" aria-labelledby="oAnnL">Désactivé</button></div>
+    <h3 class="dlg-sous">Affichage</h3>
     <div class="option"><label for="oNote">Notation</label><select id="oNote" class="choix"><option value="courte">1,2 k</option><option value="sci">1,2e3</option></select></div>
     <div class="option"><label for="oPad">Contrôles tactiles</label><select id="oPad" class="choix"><option value="auto">Automatique</option><option value="on">Afficher</option><option value="off">Masquer</option></select></div>
+    <h3 id="tTouches" class="dlg-sous">Touches</h3>
+    <p class="raison">Activez une touche puis appuyez sur la nouvelle. Échap annule. Espace et Entrée servent toujours à jouer et à valider.</p>
+    <div id="touches" class="touches" role="group" aria-labelledby="tTouches"></div>
+    <p id="keyMsg" class="raison" role="status"></p>
+    <div class="option"><span></span><button id="keysReset" class="btn">Touches par défaut</button></div>
   </div>
   <div class="dlg-actions">
     <button id="optClose" class="btn btn-fort">Fermer</button>

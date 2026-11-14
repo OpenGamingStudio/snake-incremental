@@ -36,7 +36,8 @@ export function turn(game, dir) {
 }
 
 // Avance d'un pas. Retourne { ate, died, won }.
-export function step(game, rng = Math.random, wrap = false) {
+// `forgive` (mode assisté) : un choc avec sa queue la raccourcit au lieu de tuer.
+export function step(game, rng = Math.random, wrap = false, forgive = false) {
   if (!game.alive) return { ate: false, died: true, won: false };
   if (game.queue.length) game.dir = game.queue.shift();
   const d = DIRS[game.dir];
@@ -52,7 +53,13 @@ export function step(game, rng = Math.random, wrap = false) {
   const ate = !!game.apple && game.apple.x === x && game.apple.y === y;
   // la queue va se libérer sauf si on mange : on l'exclut de la collision
   const body = ate ? game.snake : game.snake.slice(0, -1);
-  if (body.some((c) => c.x === x && c.y === y)) {
+  const hit = body.findIndex((c) => c.x === x && c.y === y);
+  if (hit >= 0 && forgive) {
+    game.snake.length = Math.max(2, hit);
+    game.snake.unshift({ x, y });
+    return { ate: false, died: false, won: false, cut: true };
+  }
+  if (hit >= 0) {
     game.alive = false;
     return { ate: false, died: true, won: false, hit: 'tail' };
   }

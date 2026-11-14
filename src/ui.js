@@ -1,14 +1,15 @@
 // Interface : rendu canvas, compteur, registre, prestige, succès, toasts.
 import { UPGRADES, ACHIEVEMENTS, upgradeCost, canBuy, stepMs, appleBase, comboBonus, comboMult,
   starMult, prestigeGain, gridSize } from './economy.js';
-import { fmtShort, fmtCount, fmtDuration } from './format.js';
+import { fmtShort, fmtCount, fmtDuration, fmtFull } from './format.js';
 
 const $ = (id) => document.getElementById(id);
 const SVG = 'http://www.w3.org/2000/svg';
-const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Mouvements réduits : préférence du système ou option du jeu (prefs.calme).
+const reduced = () => prefs.calme || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Préférences d'affichage (notation), fixées par main.js.
-export const prefs = { sci: false };
+export const prefs = { sci: false, calme: false };
 const short = (n) => fmtShort(n, prefs.sci);
 
 // Couleurs lues dans les variables CSS de :root (identité unique dans src/css/input.css).
@@ -22,6 +23,9 @@ function colors() {
   }
   return palette;
 }
+
+// Changement de palette (mode daltonien) : on relit les variables CSS.
+export function resetPalette() { palette = null; }
 
 // Netteté : le canvas suit sa taille CSS × devicePixelRatio.
 export function fitCanvas(canvas) {
@@ -67,6 +71,11 @@ export function draw(canvas, game, view) {
       const e = Math.max(2, cell * 0.14);
       ctx.fillRect(x + cell * 0.3, y + cell * 0.36, e, e);
       ctx.fillRect(x + cell * 0.7 - e, y + cell * 0.36, e, e);
+    } else if (view.combo > 1) {
+      // combo actif : un point au centre des cases, l'information ne repose pas sur la couleur seule
+      ctx.fillStyle = c.ink;
+      const m = cell * 0.4;
+      ctx.fillRect(x + m, y + m, cell - 2 * m, cell - 2 * m);
     }
   });
 }
@@ -85,7 +94,7 @@ export function renderStats(s, view, rate) {
       span.textContent = ch;
       box.appendChild(span);
     }
-    $('coinsTxt').textContent = `${text} pièces`;
+    $('coinsTxt').textContent = fmtFull(Math.floor(s.coins), 'pièce');
   }
   const combo = $('combo');
   combo.textContent = `Combo ×${view.combo}`;
@@ -93,8 +102,12 @@ export function renderStats(s, view, rate) {
   $('best').textContent = `meilleur ×${s.bestCombo}`;
   $('starsTxt').textContent = `${s.stars} (+${Math.round((starMult(s) - 1) * 100)} %)`;
   $('stars').setAttribute('aria-label', `${s.stars} étoiles, bonus +${Math.round((starMult(s) - 1) * 100)} %`);
-  $('info').textContent = `Pomme ${short(appleBase(s) * starMult(s))} · combo +${Math.round(comboBonus(s) * 100)} % par pomme · ` +
-    `${(1000 / stepMs(s)).toFixed(1).replace('.', ',')} pas/s · ${rate > 0 ? short(rate) : '—'} pièces/s`;
+  const apple = appleBase(s) * starMult(s);
+  const pace = (1000 / stepMs(s)).toFixed(1).replace('.', ',');
+  $('infoVis').textContent = `Pomme ${short(apple)} · combo +${Math.round(comboBonus(s) * 100)} % par pomme · ` +
+    `${pace} pas/s · ${rate > 0 ? short(rate) : '—'} pièces/s`;
+  $('infoSr').textContent = `Pomme : ${fmtFull(apple, 'pièce')}. Combo : plus ${Math.round(comboBonus(s) * 100)} pour cent par pomme enchaînée. ` +
+    `${pace} pas par seconde. ${rate > 0 ? fmtFull(rate, 'pièce') + ' par seconde' : 'gain par seconde inconnu'}.`;
 }
 
 // « +12 » qui monte et s'efface (600 ms), sauf mouvements réduits.
@@ -142,11 +155,15 @@ function buildShop(onBuy) {
     const u = UPGRADES[id];
     const row = document.createElement('div');
     row.className = 'upg';
+    row.setAttribute('role', 'listitem');
     const mk = (tag, cls, parent = row) => { const e = document.createElement(tag); e.className = cls; parent.appendChild(e); return e; };
     const name = mk('div', 'upg-nom');
     mk('b', '', name).textContent = u.name;
     mk('span', '', name).textContent = u.desc;
     const level = mk('span', 'upg-niveau');
+    const levelVis = mk('span', '', level);
+    levelVis.setAttribute('aria-hidden', 'true');
+    const levelSr = mk('span', 'sr-only', level);
     const effect = mk('span', 'upg-effet');
     const payback = mk('span', 'upg-retour');
     const cell = mk('div', 'upg-achat');
@@ -160,7 +177,7 @@ function buildShop(onBuy) {
     row.addEventListener('animationend', () => row.classList.remove('flash'));
     level.addEventListener('animationend', () => level.classList.remove('bond'));
     shop.appendChild(row);
-    rows.set(id, { row, level, effect, payback, btn, missing, gauge, fill, max, lvl: -1, could: null });
+    rows.set(id, { row, level, levelVis, levelSr, effect, payback, btn, missing, gauge, fill, max, lvl: -1, could: null });
   }
 }
 
@@ -177,7 +194,8 @@ export function renderShop(s, onBuy, rate, combo) {
     if (r.lvl !== lvl) {
       if (r.lvl >= 0 && lvl > r.lvl && !reduced()) r.level.classList.add('bond');
       r.lvl = lvl;
-      r.level.textContent = `×${lvl} / ${u.max}`;
+      r.levelVis.textContent = `×${lvl} / ${u.max}`;
+      r.levelSr.textContent = `Niveau ${lvl} sur ${u.max}`;
     }
     r.effect.textContent = maxed ? 'niveau maximum' : nextEffect(s, id);
     const share = maxed ? null : gainShare(s, id, combo);
@@ -190,8 +208,9 @@ export function renderShop(s, onBuy, rate, combo) {
       r.btn.textContent = `Acheter · ${short(cost)}`;
       r.btn.setAttribute('aria-disabled', String(!can));
       // le nom accessible commence par le texte visible (WCAG 2.5.3)
-      r.btn.setAttribute('aria-label', `Acheter · ${short(cost)} pièces : ${u.name}, niveau ${lvl + 1}`
-        + (can ? '' : `, manque ${short(Math.ceil(cost - s.coins))}`));
+      // valeur complète pour lecteur d'écran : « 1,2 k » devient « 1 234 pièces »
+      r.btn.setAttribute('aria-label', `Acheter · ${short(cost)}, soit ${fmtFull(cost, 'pièce')} : ${u.name}, niveau ${lvl + 1}`
+        + (can ? '' : `, manque ${fmtFull(Math.ceil(cost - s.coins), 'pièce')}`));
       if (!can) {
         r.missing.textContent = `manque ${short(Math.ceil(cost - s.coins))}`;
         r.fill.style.transform = `scaleX(${Math.max(0, Math.min(1, s.coins / cost)).toFixed(3)})`;
@@ -221,7 +240,8 @@ export function renderPrestige(s) {
     ? 'Prestige : aucune étoile à gagner pour l\'instant.'
     : `Prestige : +${gain} étoile${gain > 1 ? 's' : ''} (+${gain * 10} % de pièces).`;
   const need = 1000 - s.runEarned;
-  $('prestigeRaison').textContent = gain < 1 ? `Il manque ${short(Math.ceil(need))} pièces gagnées dans cette série (1 000 pour la première étoile).` : '';
+  btn.setAttribute('aria-describedby', gain < 1 ? 'prestigeRaison' : 'prestigeTxt');
+  $('prestigeRaison').textContent = gain < 1 ? `Il manque ${fmtFull(Math.ceil(need), 'pièce')} gagnées dans cette série (1 000 pour la première étoile).` : '';
   return gain;
 }
 
@@ -280,4 +300,8 @@ export function toast(text) {
 }
 
 // Annonce discrète pour lecteur d'écran (paliers, achats).
-export function announce(text) { $('annonce').textContent = text; }
+export function announce(text) {
+  const el = $('annonce');
+  el.textContent = '';
+  setTimeout(() => { el.textContent = text; }, 60); // vide puis remplit : une annonce identique est relue
+}

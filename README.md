@@ -16,12 +16,18 @@ Move the snake (arrows, WASD, swipe or on-screen pad), eat apples for coins, cha
 
 ## Développement / Development
 
-Site statique sans build : `python3 -m http.server 8000` puis http://localhost:8000. Structure : `src/engine.js` (snake), `src/economy.js` (améliorations, prestige, succès), `src/save.js`, `src/audio.js`, `src/ui.js`, `src/main.js` (boucle et entrées). Tests : `npm test` (`node --test`, Node ≥ 18 ; découvre `tests/*.test.js`).
+Site statique sans build : `python3 -m http.server 8000` puis http://localhost:8000. Structure : `src/keys.js` (touches remappables), `src/engine.js` (snake), `src/economy.js` (améliorations, prestige, succès), `src/save.js`, `src/audio.js`, `src/ui.js`, `src/main.js` (boucle et entrées). Tests : `npm test` (`node --test`, Node ≥ 18 ; découvre `tests/*.test.js`).
 
 ## Contribuer / Contributing
 
 Les issues et les pull requests sont les bienvenues. Les contributions sont vérifiées (cohérence, pertinence, fonctionnement) puis relues par l'équipe avant fusion sur `main`.
 Issues and pull requests are welcome. Contributions are checked (consistency, relevance, working state) and reviewed by the team before being merged into `main`.
+
+## Accessibilité / Accessibility
+
+Clavier complet (touches remappables), lecteur d'écran, mode daltonien, vitesse réduite et mode assisté, animations réduites, volume, taille du texte : voir [A11Y-AUDIT.md](A11Y-AUDIT.md).
+
+Full keyboard play (remappable keys), screen-reader support, colour-blind mode, slower speed and assisted mode, reduced motion, volume and text size: see [A11Y-AUDIT.md](A11Y-AUDIT.md).
 
 ## Styles (Tailwind CSS)
 

@@ -31,3 +31,11 @@ test('fmtDuration', () => {
   assert.equal(fmtDuration(7200), `2${S}h`);
   assert.equal(fmtDuration(Infinity), '—');
 });
+
+import { fmtFull } from '../src/format.js';
+test('fmtFull donne la valeur complète, sans abréviation', () => {
+  assert.equal(fmtFull(1234567, 'pièce'), `1${S}234${S}567${S}pièces`);
+  assert.equal(fmtFull(1, 'pièce'), `1${S}pièce`);
+  assert.equal(fmtFull(0.4, 'pièce'), `0${S}pièce`);
+  assert.equal(fmtFull(999), '999');
+});

@@ -50,3 +50,19 @@ test('la cause de la mort : mur ou queue, même après un bord traversé', () =>
   assert.equal(r.died, true);
   assert.equal(r.hit, 'tail');
 });
+
+test('mode assisté : un choc avec la queue la raccourcit sans tuer', () => {
+  const g = createGame(10);
+  g.snake = [{ x: 3, y: 3 }, { x: 3, y: 4 }, { x: 4, y: 4 }, { x: 4, y: 3 }, { x: 4, y: 2 }];
+  g.dir = 'up'; g.apple = { x: 9, y: 9 };
+  turn(g, 'right');
+  const r = step(g, Math.random, false, true);
+  assert.equal(r.died, false);
+  assert.equal(r.cut, true);
+  assert.equal(g.snake[0].x, 4);
+  assert.ok(g.snake.length >= 3 && g.snake.length < 6);
+  const g2 = createGame(10);
+  g2.snake = [{ x: 3, y: 3 }, { x: 3, y: 4 }, { x: 4, y: 4 }, { x: 4, y: 3 }, { x: 4, y: 2 }];
+  g2.dir = 'up'; turn(g2, 'right');
+  assert.equal(step(g2).died, true);
+});
