@@ -31,3 +31,10 @@ export function fmtDuration(sec) {
   if (sec < 5400) return Math.round(sec / 60) + NBSP + 'min';
   return Math.round(sec / 3600) + NBSP + 'h';
 }
+
+// Valeur complète pour lecteur d'écran : « 1 234 567 pièces », jamais d'abréviation.
+export function fmtFull(n, unit = '') {
+  if (!Number.isFinite(n)) return '—';
+  const s = String(Math.floor(Math.min(n, 1e15))).replace(/\B(?=(\d{3})+$)/g, NBSP);
+  return unit ? `${s}${NBSP}${unit}${n >= 2 ? 's' : ''}` : s;
+}

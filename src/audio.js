@@ -1,11 +1,13 @@
 // Sons WebAudio simples (aucun fichier). Créé au premier geste utilisateur.
 let ctx = null;
 let muted = false;
+let volume = 1;
 
 export function setMuted(m) { muted = m; }
+export function setVolume(v) { volume = Math.min(1, Math.max(0, v)); }
 
 function tone(freq, dur, type = 'square', vol = 0.06, when = 0) {
-  if (muted) return;
+  if (muted || volume <= 0) return;
   try {
     ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === 'suspended') ctx.resume();
@@ -13,7 +15,7 @@ function tone(freq, dur, type = 'square', vol = 0.06, when = 0) {
     const o = ctx.createOscillator();
     const g = ctx.createGain();
     o.type = type; o.frequency.setValueAtTime(freq, t);
-    g.gain.setValueAtTime(vol, t);
+    g.gain.setValueAtTime(vol * volume, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g).connect(ctx.destination);
     o.start(t); o.stop(t + dur);

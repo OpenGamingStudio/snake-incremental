@@ -3,10 +3,11 @@ import { createGame, step, turn } from './engine.js';
 import { buy, appleValue, earn, gridSize, stepMs, hasWrap, COMBO_WINDOW_STEPS,
   checkAchievements, prestige, UPGRADES } from './economy.js';
 import { load, save, SAVE_KEY } from './save.js';
-import { sfx, setMuted } from './audio.js';
-import { fmtCount } from './format.js';
+import { sfx, setMuted, setVolume } from './audio.js';
+import { ACTIONS, LABELS, DEFAULT_KEYS, actionFor, assign, cloneKeys, sanitizeKeys, keyName } from './keys.js';
+import { fmtCount, fmtFull } from './format.js';
 import { draw, fitCanvas, renderStats, renderShop, renderPrestige, prestigeSummary, renderAchievements,
-  setFilter, flyGain, toast, announce, prefs } from './ui.js';
+  setFilter, flyGain, toast, announce, prefs, resetPalette } from './ui.js';
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('board');
@@ -15,13 +16,22 @@ setMuted(state.muted);
 
 // Options d'interface : clé à part, la sauvegarde du jeu (SAVE_KEY) ne change pas.
 const OPT_KEY = 'snake-incremental-options';
-const options = { vib: true, notation: 'courte', pad: 'auto' };
+const SPEEDS = ['1', '0.75', '0.5', '0.35'];
+const TEXTS = ['100', '125', '150'];
+const options = { vib: true, notation: 'courte', pad: 'auto', volume: 100, speed: '1', assist: false, dalt: false,
+  calme: 'auto', texte: '100', ann: false, keys: cloneKeys(DEFAULT_KEYS) };
 try {
   const raw = JSON.parse(window.localStorage.getItem(OPT_KEY));
   if (raw && typeof raw === 'object') {
     if (typeof raw.vib === 'boolean') options.vib = raw.vib;
     if (raw.notation === 'courte' || raw.notation === 'sci') options.notation = raw.notation;
     if (['auto', 'on', 'off'].includes(raw.pad)) options.pad = raw.pad;
+    if (Number.isInteger(raw.volume) && raw.volume >= 0 && raw.volume <= 100) options.volume = raw.volume;
+    if (SPEEDS.includes(raw.speed)) options.speed = raw.speed;
+    if (TEXTS.includes(raw.texte)) options.texte = raw.texte;
+    if (raw.calme === 'on') options.calme = 'on';
+    for (const k of ['assist', 'dalt', 'ann']) if (typeof raw[k] === 'boolean') options[k] = raw[k];
+    options.keys = sanitizeKeys(raw.keys);
   }
 } catch { /* options absentes ou illisibles : valeurs par défaut */ }
 const saveOptions = () => { try { window.localStorage.setItem(OPT_KEY, JSON.stringify(options)); } catch { /* quota */ } };
@@ -63,6 +73,7 @@ function boardLabel(text) { canvas.setAttribute('aria-label', text); }
 
 // Carton posé sur le plateau : départ, mort, pause.
 function card(title, text, button) {
+  announce(`${title} ${text}`);
   $('voileTitre').textContent = title;
   $('voileTexte').textContent = text;
   $('voileBtn').textContent = button;
@@ -122,7 +133,7 @@ function onBuy(id) {
 }
 
 function tick() {
-  const r = step(game, Math.random, hasWrap(state));
+  const r = step(game, Math.random, hasWrap(state) || options.assist, options.assist);
   view.sinceApple++;
   if (r.ate) {
     const before = view.combo;
@@ -136,6 +147,7 @@ function tick() {
     state.bestCombo = Math.max(state.bestCombo, view.combo);
     state.bestLength = Math.max(state.bestLength, game.snake.length);
     sfx.eat(view.combo);
+    if (options.ann) announce(`${fmtFull(Math.floor(state.coins), 'pièce')}`);
     flyGain(v);
     // palier de combo : toutes les 5 pommes enchaînées
     if (view.combo >= 5 && view.combo % 5 === 0 && view.combo > before) { toast(`Combo ×${view.combo}`); announce(`Combo ×${view.combo}`); }
@@ -145,6 +157,7 @@ function tick() {
     view.combo = 0;
     refresh();
   }
+  if (r.cut) { view.combo = 0; announce(`Queue raccourcie, longueur ${game.snake.length}`); refresh(); }
   if (r.died) {
     die(r.hit === 'wall' ? 'Mur !' : 'Queue !');
   } else if (r.won) {
@@ -164,9 +177,10 @@ function frame(now) {
   acc += Math.min(now - last, 250);
   last = now;
   if (view.phase === 'running') {
-    const ms = stepMs(state);
+    const ms = stepMs(state) / Number(options.speed);
     while (acc >= ms) { acc -= ms; tick(); if (view.phase !== 'running') break; }
   } else acc = 0;
+  syncPause();
   fitCanvas(canvas);
   draw(canvas, game, view);
   requestAnimationFrame(frame);
@@ -179,16 +193,14 @@ function input(dir) {
   turn(game, dir);
 }
 
-const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
-  w: 'up', s: 'down', a: 'left', d: 'right', z: 'up', q: 'left' };
 window.addEventListener('keydown', (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey || document.querySelector('dialog[open]')) return;
   const tag = e.target instanceof Element ? e.target.tagName : '';
   if (tag === 'SELECT' || tag === 'INPUT') return;
   const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-  const d = KEYS[key];
-  if (d) { e.preventDefault(); input(d); return; }
-  if (key === 'p' || key === 'Escape') {
+  const action = actionFor(options.keys, key);
+  if (action && action !== 'pause') { e.preventDefault(); input(action); return; }
+  if (action === 'pause') {
     e.preventDefault();
     if (view.phase === 'running') pause(); else if (view.phase === 'paused') start();
     return;
@@ -201,6 +213,20 @@ window.addEventListener('keydown', (e) => {
 });
 
 $('voileBtn').addEventListener('click', start);
+// Bouton Pause : disponible à tout moment (WCAG 2.2.1), reprend s'il est déjà en pause.
+$('pauseBtn').addEventListener('click', () => {
+  if (view.phase === 'running') pause(); else if (view.phase === 'paused') start();
+});
+let shownPhase = '';
+function syncPause() {
+  if (shownPhase === view.phase) return;
+  shownPhase = view.phase;
+  const b = $('pauseBtn');
+  b.setAttribute('aria-pressed', String(view.phase === 'paused'));
+  b.setAttribute('aria-label', view.phase === 'paused' ? 'Reprendre' : 'Pause');
+  b.setAttribute('aria-disabled', String(view.phase === 'ready'));
+  b.classList.toggle('en-pause', view.phase === 'paused');
+}
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(false); });
 
 // Balayage sur le plateau (seuil 24 px) ; touch-action: none sur le plateau seulement.
@@ -247,12 +273,82 @@ function renderOptions() {
   $('oVib').setAttribute('aria-checked', String(options.vib));
   $('oVib').textContent = options.vib ? 'Activées' : 'Coupées';
   $('oNote').value = options.notation;
+  $('oVol').value = options.volume;
+  $('oVolV').textContent = `${options.volume} %`;
+  $('oVit').value = options.speed;
+  $('oCalme').value = options.calme;
+  $('oTexte').value = options.texte;
+  for (const [id, key] of [['oAss', 'assist'], ['oDalt', 'dalt'], ['oAnn', 'ann']]) {
+    $(id).setAttribute('aria-checked', String(options[key]));
+    $(id).textContent = options[key] ? 'Activé' : 'Désactivé';
+  }
+  const root = document.documentElement;
+  root.dataset.texte = options.texte;
+  if (options.dalt) root.dataset.daltonien = ''; else delete root.dataset.daltonien;
+  if (options.calme === 'on') root.dataset.calme = ''; else delete root.dataset.calme;
+  prefs.calme = options.calme === 'on';
+  resetPalette();
+  setVolume(options.volume / 100);
+  renderKeys();
   $('oPad').value = options.pad;
   if (options.pad === 'auto') delete document.body.dataset.croix; else document.body.dataset.croix = options.pad;
 }
+// Touches : un bouton par action ; on l'active, puis on appuie sur la nouvelle touche.
+let capturing = null;
+function renderKeys() {
+  const box = $('touches');
+  if (!box.children.length) {
+    for (const a of ACTIONS) {
+      const row = document.createElement('div');
+      row.className = 'option';
+      const lab = document.createElement('span');
+      lab.id = `kL-${a}`;
+      lab.textContent = LABELS[a];
+      const btn = document.createElement('button');
+      btn.id = `k-${a}`;
+      btn.className = 'btn btn-touche';
+      btn.setAttribute('aria-labelledby', `kL-${a} k-${a}`);
+      btn.addEventListener('click', () => { capturing = a; $('keyMsg').textContent = `${LABELS[a]} : appuyez sur la nouvelle touche, Échap pour annuler.`; renderKeys(); });
+      row.append(lab, btn);
+      box.appendChild(row);
+    }
+  }
+  for (const a of ACTIONS) {
+    const btn = $(`k-${a}`);
+    btn.textContent = capturing === a ? 'Appuyez sur une touche…' : options.keys[a].map(keyName).join(' / ');
+    btn.classList.toggle('capture', capturing === a);
+  }
+}
+$('dlgOptions').addEventListener('keydown', (e) => {
+  if (!capturing) return;
+  if (e.key === 'Tab' || e.key === 'Shift' || e.repeat) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const a = capturing;
+  if (e.key === 'Escape') { capturing = null; $('keyMsg').textContent = 'Changement annulé.'; renderKeys(); $(`k-${a}`).focus(); return; }
+  const res = assign(options.keys, a, e.key);
+  if (!res.ok) {
+    $('keyMsg').textContent = res.reason === 'taken' ? `${keyName(e.key.length === 1 ? e.key.toLowerCase() : e.key)} sert déjà à : ${LABELS[res.owner]}. Choisissez une autre touche.` : 'Cette touche est réservée. Choisissez une autre touche.';
+    return;
+  }
+  capturing = null;
+  $('keyMsg').textContent = `${LABELS[a]} : ${keyName(options.keys[a][0])}.`;
+  saveOptions(); renderKeys(); $(`k-${a}`).focus();
+}, true);
+$('dlgOptions').addEventListener('close', () => { capturing = null; $('keyMsg').textContent = ''; renderKeys(); });
+$('keysReset').addEventListener('click', () => { options.keys = cloneKeys(DEFAULT_KEYS); capturing = null; saveOptions(); renderKeys(); $('keyMsg').textContent = 'Touches par défaut rétablies.'; });
+
 function openDialog(dlg) { pause(false); dlg.showModal(); }
 $('optBtn').addEventListener('click', () => openDialog($('dlgOptions')));
 $('optClose').addEventListener('click', () => $('dlgOptions').close());
+$('oVol').addEventListener('input', (e) => { options.volume = Number(e.target.value); saveOptions(); renderOptions(); });
+$('oVol').addEventListener('change', () => sfx.buy());
+$('oVit').addEventListener('change', (e) => { options.speed = SPEEDS.includes(e.target.value) ? e.target.value : '1'; saveOptions(); });
+$('oCalme').addEventListener('change', (e) => { options.calme = e.target.value === 'on' ? 'on' : 'auto'; saveOptions(); renderOptions(); });
+$('oTexte').addEventListener('change', (e) => { options.texte = TEXTS.includes(e.target.value) ? e.target.value : '100'; saveOptions(); renderOptions(); });
+for (const [id, key] of [['oAss', 'assist'], ['oDalt', 'dalt'], ['oAnn', 'ann']]) {
+  $(id).addEventListener('click', () => { options[key] = !options[key]; saveOptions(); renderOptions(); });
+}
 $('oVib').addEventListener('click', () => { options.vib = !options.vib; saveOptions(); renderOptions(); buzz(30); });
 $('oNote').addEventListener('change', (e) => { options.notation = e.target.value === 'sci' ? 'sci' : 'courte'; saveOptions(); refresh(); });
 $('oPad').addEventListener('change', (e) => { options.pad = ['on', 'off'].includes(e.target.value) ? e.target.value : 'auto'; saveOptions(); renderOptions(); });

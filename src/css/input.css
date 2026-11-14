@@ -39,7 +39,7 @@
   :root{color-scheme:light;--plateau-max:560px}
   body{touch-action:manipulation;background:var(--color-quadrille);color:var(--color-encre);min-height:100vh;overflow-x:hidden}
   button{cursor:pointer}
-  button:focus-visible,a:focus-visible,select:focus-visible{outline:3px solid var(--color-encre);outline-offset:3px}
+  button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--color-encre);outline-offset:3px}
   dialog{margin:auto}
 }
 
@@ -61,7 +61,7 @@
   .curseur{fill:var(--color-framboise);stroke:var(--color-encre);stroke-width:1.5}
 
   /* en-tête 56 px */
-  .entete{display:flex;align-items:center;gap:.5rem;height:56px;max-width:1440px;margin:0 auto;padding:0 max(1rem,env(safe-area-inset-right)) 0 max(1rem,env(safe-area-inset-left))}
+  .entete{display:flex;align-items:center;gap:.5rem;min-height:56px;max-width:1440px;margin:0 auto;padding:0 max(1rem,env(safe-area-inset-right)) 0 max(1rem,env(safe-area-inset-left))}
   .logo-mot{margin-right:auto;min-width:0;font-weight:700;font-size:clamp(1.0625rem,5.5vw,1.75rem);line-height:1;white-space:nowrap;transform:rotate(-2deg);color:var(--color-encre);background:var(--color-chlorophylle);border:3px solid var(--color-encre);border-radius:var(--radius-bouton);box-shadow:var(--shadow-dure);padding:.15em .45em}
 
   /* mise en page : une colonne par défaut */
@@ -84,7 +84,7 @@
   .combo{min-width:5.5rem}
   .combo.chaud{color:var(--color-foret);font-weight:700}
   .meilleur{color:var(--color-mine);font-size:var(--text-note)}
-  .etoiles{display:inline-flex;align-items:center;gap:.3rem;background:var(--color-miel);border:3px solid var(--color-encre);border-radius:var(--radius-plateau);padding:.1rem .5rem}
+  .etoiles{white-space:nowrap;display:inline-flex;align-items:center;gap:.3rem;background:var(--color-miel);border:3px solid var(--color-encre);border-radius:var(--radius-plateau);padding:.1rem .5rem}
   .ico-etoile{width:16px;height:16px;fill:var(--color-encre)}
   .taux{margin-top:.5rem;font-size:var(--text-note);font-weight:500;color:var(--color-mine);font-variant-numeric:tabular-nums}
 
@@ -154,7 +154,7 @@
   .lien-btn{color:var(--color-mine)}
 
   /* dialogues natifs : voile quadrille 85 %, pas de flou */
-  .dlg{width:min(92vw,28rem);background:#fff;color:var(--color-encre);border:3px solid var(--color-encre);border-radius:var(--radius-bouton);box-shadow:6px 6px 0 var(--color-encre);padding:1.25rem}
+  .dlg{max-height:90dvh;overflow-y:auto;width:min(92vw,28rem);background:#fff;color:var(--color-encre);border:3px solid var(--color-encre);border-radius:var(--radius-bouton);box-shadow:6px 6px 0 var(--color-encre);padding:1.25rem}
   .dlg[open]{animation:fondu .15s ease-out}
   .dlg::backdrop{background:rgb(233 247 223 / .85)}
   .dlg-titre{font-weight:700;font-size:1.5rem;line-height:1.1}
@@ -176,9 +176,10 @@
 /* 320-599 : compteur en bandeau collant de 56 px, lignes du registre sur 2 rangées */
 @media (max-width:599.98px){
   .zone-compteur{position:sticky;top:0;z-index:10;margin:0 -1rem;padding:0 1rem;background:var(--color-quadrille);border-bottom:3px solid var(--color-encre)}
-  .bandeau{flex-wrap:nowrap;align-items:center;justify-content:space-between;height:56px}
+  .bandeau{flex-wrap:nowrap;align-items:center;justify-content:space-between;min-height:56px}
   .chiffres{font-size:1.75rem}
-  .unite,.meilleur,.taux{display:none}
+  .unite{display:none}
+  .meilleur,.taux{@apply sr-only}
   .sous-ligne{flex-wrap:nowrap;gap:.5rem}
   .combo{min-width:0}
   /* la colonne d'achat suit le bouton, qui tient toujours sur une ligne */
@@ -210,8 +211,43 @@
   .chiffres{font-size:3rem}
 }
 
+/* Mouvements réduits : préférence du système OU option « Animations : réduites » (data-calme) */
 @media (prefers-reduced-motion:reduce){
   .btn{transition:none}
+  .btn:active:not([aria-disabled="true"]){transform:none}
   .vol,.vol.go{display:none;animation:none}
-  .upg.flash,.upg-niveau.bond,.toast{animation:none}
+  .upg.flash,.upg-niveau.bond,.toast,.dlg[open]{animation:none}
 }
+[data-calme] .btn{transition:none}
+[data-calme] .btn:active:not([aria-disabled="true"]){transform:none}
+[data-calme] .vol,[data-calme] .vol.go{display:none;animation:none}
+[data-calme] .upg.flash,[data-calme] .upg-niveau.bond,[data-calme] .toast,[data-calme] .dlg[open]{animation:none}
+
+/* Accessibilité : lien d'évitement, pause, réglages, tailles de texte, mode daltonien */
+.skip{position:absolute;left:.5rem;top:-4rem;z-index:50;min-height:44px;display:inline-flex;align-items:center;padding:0 1rem;background:#fff;color:var(--color-encre);border:3px solid var(--color-encre);border-radius:var(--radius-bouton);font-weight:700}
+.skip:focus{top:.5rem}
+.p-play{display:none}
+.en-pause .p-play{display:block}
+.en-pause .p-pause{display:none}
+.dlg-sous{margin-top:.6rem;font-size:1.0625rem;font-weight:700;border-bottom:3px solid var(--color-encre);padding-bottom:.15rem}
+.dlg-sous:first-child{margin-top:0}
+.curseur-vol{display:flex;align-items:center;gap:.6rem}
+.curseur-vol input{width:7.5rem;min-height:44px;accent-color:var(--color-framboise)}
+.curseur-vol output{min-width:3.2rem;text-align:right;font-variant-numeric:tabular-nums}
+.touches{display:grid;gap:.5rem}
+.btn-touche{min-width:9rem;max-width:60%;font-size:var(--text-note)}
+.btn-touche.capture{background:var(--color-miel);border-style:dashed}
+.btn-bascule[aria-checked="false"]{background:#fff}
+:root[data-texte="125"]{font-size:125%}
+:root[data-texte="150"]{font-size:150%}
+:root[data-texte="125"] .zone-compteur,:root[data-texte="150"] .zone-compteur{position:static}
+:root[data-texte] .sous-ligne{flex-wrap:wrap}
+:root[data-texte="125"] .entete,:root[data-texte="150"] .entete{flex-wrap:wrap;padding-block:.25rem}
+:root[data-texte="125"] .logo-mot,:root[data-texte="150"] .logo-mot{white-space:normal}
+/* palette Okabe-Ito : bleu ciel, vermillon sombre, jaune ; papier gris-bleu. L'information reste aussi portée par la forme et le texte. */
+:root[data-daltonien]{--color-quadrille:#EEF3F8;--color-marge:#D3E1EE;--color-trait:#B7C9DA;--color-chlorophylle:#56B4E9;--color-foret:#00507D;--color-framboise:#B34700}
+:root[data-daltonien] .btn-bascule[aria-checked="true"]{background:var(--color-encre);color:#fff}
+:root[data-daltonien] .voile{background:rgb(238 243 248 / .85)}
+:root[data-daltonien] .dlg::backdrop{background:rgb(238 243 248 / .85)}
+:root[data-daltonien] .btn[aria-disabled="true"]{border-style:dashed}
+@media (max-width:379.98px){.logo-mot{white-space:normal;font-size:.9375rem;line-height:1.05}}
