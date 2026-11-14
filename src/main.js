@@ -321,7 +321,8 @@ function renderKeys() {
 }
 $('dlgOptions').addEventListener('keydown', (e) => {
   if (!capturing) return;
-  if (e.key === 'Tab' || e.key === 'Shift' || e.repeat) return;
+  if (e.key === 'Shift' || e.repeat) return;
+  if (e.key === 'Tab') { capturing = null; $('keyMsg').textContent = 'Changement annulé.'; renderKeys(); return; } // Tab quitte le bouton : on annule la capture, le focus suit
   e.preventDefault();
   e.stopPropagation();
   const a = capturing;
