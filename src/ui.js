@@ -1,6 +1,6 @@
 // Interface : rendu canvas, compteur, registre, prestige, succès, toasts.
 import { UPGRADES, ACHIEVEMENTS, upgradeCost, canBuy, stepMs, appleBase, comboBonus, comboMult,
-  starMult, prestigeGain, gridSize } from './economy.js';
+  starMult, prestigeGain, gridSize, nextAffordable } from './economy.js';
 import { fmtShort, fmtCount, fmtDuration, fmtFull } from './format.js';
 
 const $ = (id) => document.getElementById(id);
@@ -223,6 +223,11 @@ export function renderShop(s, onBuy, rate, combo) {
     if (!r.row.hidden) shown++;
   }
   $('shopVide').hidden = shown > 0;
+  const next = nextAffordable(s, rate);
+  $('prochain').textContent = !next ? 'Toutes les améliorations sont au maximum.'
+    : next.ready ? `Achetable maintenant : ${UPGRADES[next.id].name} (${short(next.cost)} pièces).`
+    : `Prochain achat : ${UPGRADES[next.id].name}, il manque ${short(Math.ceil(next.missing))} pièces`
+      + (next.seconds === null ? '.' : `, environ ${fmtDuration(next.seconds)} à ce rythme.`);
 }
 
 export function setFilter(buyable) {

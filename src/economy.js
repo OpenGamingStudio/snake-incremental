@@ -16,6 +16,7 @@ export function newState() {
     bestCombo: 0, bestLength: 3, stars: 0, prestiges: 0,
     levels: { speed: 0, value: 0, combo: 0, grid: 0, wrap: 0 },
     achievements: {}, muted: false,
+    lastSeen: 0, idleRate: 0, // ms de la dernière visite, pièces/s récentes (gain hors-ligne)
   };
 }
 
@@ -34,6 +35,21 @@ export function buy(state, id) {
   state.coins -= upgradeCost(id, state.levels[id]);
   state.levels[id]++;
   return true;
+}
+
+// Prochain achat à portée : l'amélioration non maximale la moins chère.
+// seconds : délai au rythme actuel (0 si prêt, null sans rythme connu).
+export function nextAffordable(state, rate = 0) {
+  let best = null;
+  for (const id of Object.keys(UPGRADES)) {
+    const lvl = state.levels[id];
+    if (lvl >= UPGRADES[id].max) continue;
+    const cost = upgradeCost(id, lvl);
+    if (!best || cost < best.cost) best = { id, cost };
+  }
+  if (!best) return null;
+  const missing = Math.max(0, best.cost - state.coins);
+  return { ...best, missing, ready: missing === 0, seconds: missing === 0 ? 0 : rate > 0 ? missing / rate : null };
 }
 
 export const stepMs = (s) => Math.max(60, Math.round(240 * Math.pow(0.93, s.levels.speed)));
