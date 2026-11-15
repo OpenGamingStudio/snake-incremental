@@ -120,6 +120,22 @@ export function flyGain(v) {
   el.classList.add('go');
 }
 
+// Récompense : le rang du registre s'illumine à l'achat, la pastille de combo rebondit au palier.
+export function rewardBuy(id) {
+  const r = rows.get(id);
+  if (!r || reduced()) return;
+  r.row.classList.remove('recompense');
+  void r.row.offsetWidth;
+  r.row.classList.add('recompense');
+}
+export function rewardCombo() {
+  const el = $('combo');
+  if (reduced()) return;
+  el.classList.remove('palier');
+  void el.offsetWidth;
+  el.classList.add('palier');
+}
+
 // Effet du prochain niveau, en clair.
 function nextEffect(s, id) {
   const lvl = s.levels[id];
@@ -174,7 +190,8 @@ function buildShop(onBuy) {
     const max = mk('span', 'max', cell);
     max.textContent = 'MAX';
     btn.addEventListener('click', () => { if (btn.getAttribute('aria-disabled') !== 'true') onBuy(id); });
-    row.addEventListener('animationend', () => row.classList.remove('flash'));
+    row.addEventListener('animationend', () => row.classList.remove('flash', 'recompense'));
+    $('combo').addEventListener('animationend', () => $('combo').classList.remove('palier'));
     level.addEventListener('animationend', () => level.classList.remove('bond'));
     shop.appendChild(row);
     rows.set(id, { row, level, levelVis, levelSr, effect, payback, btn, missing, gauge, fill, max, lvl: -1, could: null });

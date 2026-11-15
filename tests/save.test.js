@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { sanitize } from '../src/save.js';
-import { UPGRADES } from '../src/economy.js';
+import { sanitize, load, save } from '../src/save.js';
+import { UPGRADES, newState } from '../src/economy.js';
 
 test('sanitize borne les niveaux et les pièces', () => {
   const s = sanitize({ coins: -5, runEarned: -1, levels: { grid: 1e6, speed: 3 } });
@@ -17,4 +17,13 @@ test('sanitize plafonne les nombres et ignore les clés inconnues', () => {
   assert.equal(s.apples, 0);
   assert.deepEqual(s.achievements, { a1: true });
   assert.equal(s.levels.speed, 0);
+});
+
+test('le choix du son coupé est mémorisé', () => {
+  const store = new Map();
+  const storage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v) };
+  const s = newState();
+  s.muted = true;
+  save(storage, s);
+  assert.equal(load(storage).muted, true);
 });
