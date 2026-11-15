@@ -38,7 +38,8 @@
 
 @layer base {
   :root{color-scheme:light;--plateau-max:560px}
-  body{touch-action:manipulation;background:var(--color-quadrille);color:var(--color-encre);min-height:100vh;overflow-x:hidden}
+  html{overscroll-behavior:none;-webkit-text-size-adjust:100%}
+  body{touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:var(--color-quadrille);color:var(--color-encre);min-height:100vh;min-height:100dvh;overflow-x:hidden;overscroll-behavior:none}
   button{cursor:pointer}
   button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--color-encre);outline-offset:3px}
   dialog{margin:auto}
@@ -62,7 +63,7 @@
   .curseur{fill:var(--color-framboise);stroke:var(--color-encre);stroke-width:1.5}
 
   /* en-tête 56 px */
-  .entete{display:flex;align-items:center;gap:.5rem;min-height:56px;max-width:1440px;margin:0 auto;padding:0 max(1rem,env(safe-area-inset-right)) 0 max(1rem,env(safe-area-inset-left))}
+  .entete{display:flex;align-items:center;gap:.5rem;min-height:56px;max-width:1440px;margin:0 auto;padding:env(safe-area-inset-top) max(1rem,env(safe-area-inset-right)) 0 max(1rem,env(safe-area-inset-left))}
   .logo-mot{margin-right:auto;min-width:0;font-weight:700;font-size:clamp(1.0625rem,5.5vw,1.75rem);line-height:1;white-space:nowrap;transform:rotate(-2deg);color:var(--color-encre);background:var(--color-chlorophylle);border:3px solid var(--color-encre);border-radius:var(--radius-bouton);box-shadow:var(--shadow-dure);padding:.15em .45em}
 
   /* mise en page : une colonne par défaut */
@@ -92,7 +93,7 @@
   .taux{margin-top:.5rem;font-size:var(--text-note);font-weight:500;color:var(--color-mine);font-variant-numeric:tabular-nums}
 
   /* plateau : carré, jamais coupé */
-  .cadre{position:relative;width:min(100%,70vh,var(--plateau-max));margin:0 auto}
+  .cadre{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;position:relative;width:min(100%,70vh,var(--plateau-max));margin:0 auto}
   .plateau{display:block;width:100%;aspect-ratio:1;touch-action:none;background:var(--color-quadrille);border:3px solid var(--color-encre);border-radius:var(--radius-plateau);box-shadow:var(--shadow-dure)}
   .plateau.traverse{border-style:dashed}
   .voile{position:absolute;inset:0;display:grid;place-items:center;padding:1rem;background:rgb(233 247 223 / .85);border-radius:var(--radius-plateau)}
@@ -103,7 +104,7 @@
 
   /* croix directionnelle : 56 px, écart 8 px */
   .croix{display:grid;grid-template-columns:repeat(3,64px);grid-template-areas:". h ." "g b d";gap:8px;justify-content:center;margin-top:1rem}
-  .pad{min-height:56px;padding:0;background:var(--color-chlorophylle)}
+  .pad{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;min-height:56px;padding:0;background:var(--color-chlorophylle)}
   .pad-h{grid-area:h}.pad-g{grid-area:g}.pad-b{grid-area:b}.pad-d{grid-area:d}
   @media (min-width:1024px) and (hover:hover) and (pointer:fine){.croix{display:none}}
   [data-croix="on"] .croix{display:grid}

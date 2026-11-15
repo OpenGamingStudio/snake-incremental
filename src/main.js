@@ -6,6 +6,7 @@ import { load, save, SAVE_KEY } from './save.js';
 import { sfx, setMuted, setVolume } from './audio.js';
 import { ACTIONS, LABELS, DEFAULT_KEYS, actionFor, assign, cloneKeys, sanitizeKeys, keyName } from './keys.js';
 import { fmtCount, fmtFull } from './format.js';
+import { swipeDir } from './swipe.js';
 import { draw, fitCanvas, renderStats, renderShop, renderPrestige, prestigeSummary, renderAchievements,
   setFilter, flyGain, rewardBuy, rewardCombo, toast, announce, prefs, resetPalette } from './ui.js';
 
@@ -55,6 +56,7 @@ function rate() {
 }
 
 function refresh() {
+  wake();
   prefs.sci = options.notation === 'sci';
   const r = rate();
   renderStats(state, view, r);
@@ -73,6 +75,7 @@ function boardLabel(text) { canvas.setAttribute('aria-label', text); }
 
 // Carton posé sur le plateau : départ, mort, pause.
 function card(title, text, button) {
+  wake();
   announce(`${title} ${text}`);
   $('voileTitre').textContent = title;
   $('voileTexte').textContent = text;
@@ -89,6 +92,7 @@ function resetSnake() {
 
 function start() {
   if (view.phase === 'running' || document.querySelector('dialog[open]')) return;
+  wake();
   const hadFocus = document.activeElement === $('voileBtn');
   view.phase = 'running';
   view.first = false;
@@ -178,24 +182,42 @@ function tick() {
   }
 }
 
+// Boucle d'animation à la demande : elle tourne seulement pendant la partie, ou le temps de redessiner
+// après un changement (wake). Onglet caché ou jeu à l'arrêt : aucune image demandée.
+let raf = 0;
+let dirty = true;
+function wake() {
+  dirty = true;
+  if (raf || document.hidden) return;
+  last = performance.now();
+  raf = requestAnimationFrame(frame);
+}
+
 function frame(now) {
+  raf = 0;
+  let changed = dirty;
+  dirty = false;
   acc += Math.min(now - last, 250);
   last = now;
   if (view.phase === 'running') {
     const ms = stepMs(state) / Number(options.speed);
-    while (acc >= ms) { acc -= ms; tick(); if (view.phase !== 'running') break; }
+    while (acc >= ms) { acc -= ms; tick(); changed = true; if (view.phase !== 'running') break; }
   } else acc = 0;
   syncPause();
-  fitCanvas(canvas);
-  draw(canvas, game, view);
-  requestAnimationFrame(frame);
+  if (changed) {
+    fitCanvas(canvas);
+    draw(canvas, game, view);
+  }
+  if (view.phase === 'running' || dirty) raf = requestAnimationFrame(frame);
 }
+window.addEventListener('resize', wake);
 
 function input(dir) {
   if (document.querySelector('dialog[open]')) return;
   if (view.phase === 'paused') return;
   if (view.phase === 'ready') start();
   turn(game, dir);
+  wake();
 }
 
 window.addEventListener('keydown', (e) => {
@@ -232,25 +254,36 @@ function syncPause() {
   b.setAttribute('aria-disabled', String(view.phase === 'ready'));
   b.classList.toggle('en-pause', view.phase === 'paused');
 }
-document.addEventListener('visibilitychange', () => { if (document.hidden) pause(false); });
-
-// Balayage sur le plateau (seuil 24 px) ; touch-action: none sur le plateau seulement.
-let p0 = null;
-canvas.tabIndex = -1;
-canvas.addEventListener('pointerdown', (e) => {
-  p0 = { x: e.clientX, y: e.clientY, id: e.pointerId };
-  try { canvas.setPointerCapture(e.pointerId); } catch { /* pointeur déjà relâché */ }
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    pause(false);
+    cancelAnimationFrame(raf);
+    raf = 0;
+    return;
+  }
+  wake();
 });
-canvas.addEventListener('pointermove', (e) => {
+
+// Balayage sur le cadre du plateau (plateau + carton, seuil SWIPE_MIN) ; touch-action: none sur le cadre seulement.
+let p0 = null;
+const cadre = document.querySelector('.cadre');
+canvas.tabIndex = -1;
+cadre.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('button')) return; // le bouton du carton garde son clic
+  p0 = { x: e.clientX, y: e.clientY, id: e.pointerId };
+  try { cadre.setPointerCapture(e.pointerId); } catch { /* pointeur déjà relâché */ }
+});
+cadre.addEventListener('pointermove', (e) => {
   if (!p0 || e.pointerId !== p0.id) return;
-  const dx = e.clientX - p0.x, dy = e.clientY - p0.y;
-  if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
-  input(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+  const dir = swipeDir(e.clientX - p0.x, e.clientY - p0.y);
+  if (!dir) return;
+  input(dir);
   p0 = { x: e.clientX, y: e.clientY, id: e.pointerId };
 });
 const release = () => { p0 = null; };
-canvas.addEventListener('pointerup', release);
-canvas.addEventListener('pointercancel', release);
+cadre.addEventListener('pointerup', release);
+cadre.addEventListener('pointercancel', release);
+cadre.addEventListener('lostpointercapture', release);
 
 // Croix tactile : réagit dès l'appui ; Entrée / Espace au clavier passent par click.
 document.querySelectorAll('[data-dir]').forEach((b) => {
@@ -275,6 +308,7 @@ $('oSon').addEventListener('click', toggleSound);
 
 // Options
 function renderOptions() {
+  wake();
   $('oVib').setAttribute('aria-checked', String(options.vib));
   $('oVib').textContent = options.vib ? 'Activées' : 'Coupées';
   $('oNote').value = options.notation;
@@ -410,8 +444,8 @@ $('resetYes').addEventListener('click', () => {
 const autosave = () => { if (!resetting) save(window.localStorage, state); };
 setInterval(autosave, 15000);
 // le taux « pièces/s » et « Rentabilisé en » vieillissent même sans pomme
-setInterval(() => { if (view.phase === 'running') refresh(); }, 2000);
+setInterval(() => { if (view.phase === 'running' && !document.hidden) refresh(); }, 2000);
 window.addEventListener('beforeunload', autosave);
 renderSound(); renderOptions();
 unlock(); refresh(); renderAchievements(state);
-requestAnimationFrame(frame);
+wake();
