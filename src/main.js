@@ -5,7 +5,8 @@ import { buy, appleValue, earn, gridSize, stepMs, hasWrap, COMBO_WINDOW_STEPS,
 import { load, save, SAVE_KEY } from './save.js';
 import { sfx, setMuted, setVolume } from './audio.js';
 import { ACTIONS, LABELS, DEFAULT_KEYS, actionFor, assign, cloneKeys, sanitizeKeys, keyName } from './keys.js';
-import { fmtCount, fmtFull } from './format.js';
+import { fmtCount, fmtFull, fmtDuration } from './format.js';
+import { offlineGain } from './offline.js';
 import { swipeDir } from './swipe.js';
 import { draw, fitCanvas, renderStats, renderShop, renderPrestige, prestigeSummary, renderAchievements,
   setFilter, flyGain, rewardBuy, rewardCombo, toast, announce, prefs, resetPalette } from './ui.js';
@@ -53,6 +54,27 @@ function rate() {
   if (!gains.length) return 0;
   const span = Math.max(5000, Math.min(30000, now - gains[0].t));
   return gains.reduce((sum, g) => sum + g.v, 0) / (span / 1000);
+}
+
+// Sauvegarde + horodatage : le rythme récent (pièces/s) sert au gain hors-ligne au retour.
+// Onglet caché : on garde l'heure de départ, sinon l'autosave effacerait l'absence.
+function persist() {
+  if (!document.hidden) {
+    state.lastSeen = Date.now();
+    const r = rate();
+    if (r > 0) state.idleRate = r;
+  }
+  save(window.localStorage, state);
+}
+
+// Créditer l'absence ; retourne le texte récapitulatif ou ''.
+function claimOffline() {
+  const res = offlineGain(state, Date.now());
+  state.lastSeen = Date.now();
+  if (!res) return '';
+  earn(state, res.gain);
+  const time = fmtDuration(res.secs);
+  return `Pendant votre absence${res.capped ? ` (plafonné à ${time})` : ` (${fmtDuration(res.away)})`} : +${fmtCount(res.gain)} pièces.`;
 }
 
 function refresh() {
@@ -118,7 +140,7 @@ function die(cause) {
   sfx.die();
   buzz(80);
   unlock();
-  save(window.localStorage, state);
+  persist();
   resetSnake();
   view.phase = 'ready';
   card(cause, `Longueur ${len}, +${fmtCount(earned)} pièces cette partie.`, 'Rejouer');
@@ -135,7 +157,7 @@ function onBuy(id) {
   announce(`${UPGRADES[id].name} niveau ${state.levels[id]}`);
   if (id === 'grid' && view.phase !== 'running') resetSnake();
   else if (id === 'grid') { resetSnake(); pause(false); card('Grille agrandie', 'Le plateau gagne une case de côté.', 'Reprendre'); }
-  unlock(); save(window.localStorage, state); refresh();
+  unlock(); persist(); refresh();
 }
 
 function tick() {
@@ -171,7 +193,7 @@ function tick() {
     die(r.hit === 'wall' ? 'Mur !' : 'Queue !');
   } else if (r.won) {
     unlock();
-    save(window.localStorage, state);
+    persist();
     const len = game.snake.length;
     const earned = view.earned;
     resetSnake();
@@ -256,12 +278,15 @@ function syncPause() {
 }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
+    if (!resetting) persist(); // dernière heure vue et rythme, avant que le navigateur fige l'onglet
     pause(false);
     cancelAnimationFrame(raf);
     raf = 0;
     return;
   }
   wake();
+  const recap = claimOffline();
+  if (recap) { toast(recap); announce(recap); persist(); refresh(); }
 });
 
 // Balayage sur le cadre du plateau (plateau + carton, seuil SWIPE_MIN) ; touch-action: none sur le cadre seulement.
@@ -301,7 +326,7 @@ function toggleSound() {
   state.muted = !state.muted;
   setMuted(state.muted);
   renderSound();
-  save(window.localStorage, state);
+  persist();
 }
 $('mute').addEventListener('click', toggleSound);
 $('oSon').addEventListener('click', toggleSound);
@@ -415,7 +440,7 @@ $('prestigeYes').addEventListener('click', () => {
   view.phase = 'ready';
   card('Nouvelle série', `+${gain} étoile${gain > 1 ? 's' : ''} : chaque pomme rapporte davantage.`, 'Jouer');
   announce(`Prestige : ${state.stars} étoiles`);
-  unlock(); save(window.localStorage, state); refresh(); renderAchievements(state);
+  unlock(); persist(); refresh(); renderAchievements(state);
 });
 
 // Réinitialiser : double confirmation
@@ -441,11 +466,13 @@ $('resetYes').addEventListener('click', () => {
   location.reload();
 });
 
-const autosave = () => { if (!resetting) save(window.localStorage, state); };
+const autosave = () => { if (!resetting) persist(); };
 setInterval(autosave, 15000);
 // le taux « pièces/s » et « Rentabilisé en » vieillissent même sans pomme
 setInterval(() => { if (view.phase === 'running' && !document.hidden) refresh(); }, 2000);
 window.addEventListener('beforeunload', autosave);
 renderSound(); renderOptions();
+const welcome = claimOffline();
 unlock(); refresh(); renderAchievements(state);
+if (welcome) { card('Bon retour !', welcome, 'Jouer'); persist(); }
 wake();

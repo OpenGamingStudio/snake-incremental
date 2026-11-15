@@ -135,6 +135,8 @@
   .upg:nth-child(even) .jauge{background:var(--color-quadrille)}
   .jauge i{display:block;height:100%;background:var(--color-foret);transform-origin:left center}
   .max{justify-self:end;display:inline-block;background:var(--color-miel);border:3px solid var(--color-encre);border-radius:var(--radius-plateau);padding:.15rem .7rem;font-weight:700;transform:rotate(-2deg)}
+  .prochain{margin-bottom:.75rem;padding:.4rem .7rem;background:var(--color-miel);border:3px solid var(--color-encre);border-radius:var(--radius-plateau);font-size:var(--text-ligne);font-weight:600}
+  .prochain:empty{display:none}
   .note-vide{margin-top:.75rem;font-size:var(--text-note);color:var(--color-mine);font-weight:500}
 
   .prestige-bloc{margin-top:1.25rem;display:grid;gap:.5rem}
