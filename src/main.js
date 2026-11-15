@@ -6,6 +6,7 @@ import { load, save, SAVE_KEY } from './save.js';
 import { sfx, setMuted, setVolume } from './audio.js';
 import { ACTIONS, LABELS, DEFAULT_KEYS, actionFor, assign, cloneKeys, sanitizeKeys, keyName } from './keys.js';
 import { fmtCount, fmtFull } from './format.js';
+import { swipeDir } from './swipe.js';
 import { draw, fitCanvas, renderStats, renderShop, renderPrestige, prestigeSummary, renderAchievements,
   setFilter, flyGain, toast, announce, prefs, resetPalette } from './ui.js';
 
@@ -229,23 +230,26 @@ function syncPause() {
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(false); });
 
-// Balayage sur le plateau (seuil 24 px) ; touch-action: none sur le plateau seulement.
+// Balayage sur le cadre du plateau (plateau + carton, seuil SWIPE_MIN) ; touch-action: none sur le cadre seulement.
 let p0 = null;
+const cadre = document.querySelector('.cadre');
 canvas.tabIndex = -1;
-canvas.addEventListener('pointerdown', (e) => {
+cadre.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('button')) return; // le bouton du carton garde son clic
   p0 = { x: e.clientX, y: e.clientY, id: e.pointerId };
-  try { canvas.setPointerCapture(e.pointerId); } catch { /* pointeur déjà relâché */ }
+  try { cadre.setPointerCapture(e.pointerId); } catch { /* pointeur déjà relâché */ }
 });
-canvas.addEventListener('pointermove', (e) => {
+cadre.addEventListener('pointermove', (e) => {
   if (!p0 || e.pointerId !== p0.id) return;
-  const dx = e.clientX - p0.x, dy = e.clientY - p0.y;
-  if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
-  input(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+  const dir = swipeDir(e.clientX - p0.x, e.clientY - p0.y);
+  if (!dir) return;
+  input(dir);
   p0 = { x: e.clientX, y: e.clientY, id: e.pointerId };
 });
 const release = () => { p0 = null; };
-canvas.addEventListener('pointerup', release);
-canvas.addEventListener('pointercancel', release);
+cadre.addEventListener('pointerup', release);
+cadre.addEventListener('pointercancel', release);
+cadre.addEventListener('lostpointercapture', release);
 
 // Croix tactile : réagit dès l'appui ; Entrée / Espace au clavier passent par click.
 document.querySelectorAll('[data-dir]').forEach((b) => {
