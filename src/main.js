@@ -7,7 +7,7 @@ import { sfx, setMuted, setVolume } from './audio.js';
 import { ACTIONS, LABELS, DEFAULT_KEYS, actionFor, assign, cloneKeys, sanitizeKeys, keyName } from './keys.js';
 import { fmtCount, fmtFull } from './format.js';
 import { draw, fitCanvas, renderStats, renderShop, renderPrestige, prestigeSummary, renderAchievements,
-  setFilter, flyGain, toast, announce, prefs, resetPalette } from './ui.js';
+  setFilter, flyGain, rewardBuy, rewardCombo, toast, announce, prefs, resetPalette } from './ui.js';
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('board');
@@ -126,6 +126,8 @@ function die(cause) {
 function onBuy(id) {
   if (!buy(state, id)) return;
   sfx.buy();
+  buzz(25);
+  rewardBuy(id);
   announce(`${UPGRADES[id].name} niveau ${state.levels[id]}`);
   if (id === 'grid' && view.phase !== 'running') resetSnake();
   else if (id === 'grid') { resetSnake(); pause(false); card('Grille agrandie', 'Le plateau gagne une case de côté.', 'Reprendre'); }
@@ -150,7 +152,10 @@ function tick() {
     if (options.ann) announce(`${fmtFull(Math.floor(state.coins), 'pièce')}`);
     flyGain(v);
     // palier de combo : toutes les 5 pommes enchaînées
-    if (view.combo >= 5 && view.combo % 5 === 0 && view.combo > before) { toast(`Combo ×${view.combo}`); announce(`Combo ×${view.combo}`); }
+    if (view.combo >= 5 && view.combo % 5 === 0 && view.combo > before) {
+      toast(`Combo ×${view.combo}`); announce(`Combo ×${view.combo}`);
+      sfx.combo(view.combo / 5); buzz(40); rewardCombo();
+    }
     unlock();
     refresh();
   } else if (view.combo && view.sinceApple > COMBO_WINDOW_STEPS) {
