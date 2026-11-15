@@ -55,6 +55,7 @@ function rate() {
 }
 
 function refresh() {
+  wake();
   prefs.sci = options.notation === 'sci';
   const r = rate();
   renderStats(state, view, r);
@@ -73,6 +74,7 @@ function boardLabel(text) { canvas.setAttribute('aria-label', text); }
 
 // Carton posé sur le plateau : départ, mort, pause.
 function card(title, text, button) {
+  wake();
   announce(`${title} ${text}`);
   $('voileTitre').textContent = title;
   $('voileTexte').textContent = text;
@@ -89,6 +91,7 @@ function resetSnake() {
 
 function start() {
   if (view.phase === 'running' || document.querySelector('dialog[open]')) return;
+  wake();
   const hadFocus = document.activeElement === $('voileBtn');
   view.phase = 'running';
   view.first = false;
@@ -173,24 +176,42 @@ function tick() {
   }
 }
 
+// Boucle d'animation à la demande : elle tourne seulement pendant la partie, ou le temps de redessiner
+// après un changement (wake). Onglet caché ou jeu à l'arrêt : aucune image demandée.
+let raf = 0;
+let dirty = true;
+function wake() {
+  dirty = true;
+  if (raf || document.hidden) return;
+  last = performance.now();
+  raf = requestAnimationFrame(frame);
+}
+
 function frame(now) {
+  raf = 0;
+  let changed = dirty;
+  dirty = false;
   acc += Math.min(now - last, 250);
   last = now;
   if (view.phase === 'running') {
     const ms = stepMs(state) / Number(options.speed);
-    while (acc >= ms) { acc -= ms; tick(); if (view.phase !== 'running') break; }
+    while (acc >= ms) { acc -= ms; tick(); changed = true; if (view.phase !== 'running') break; }
   } else acc = 0;
   syncPause();
-  fitCanvas(canvas);
-  draw(canvas, game, view);
-  requestAnimationFrame(frame);
+  if (changed) {
+    fitCanvas(canvas);
+    draw(canvas, game, view);
+  }
+  if (view.phase === 'running' || dirty) raf = requestAnimationFrame(frame);
 }
+window.addEventListener('resize', wake);
 
 function input(dir) {
   if (document.querySelector('dialog[open]')) return;
   if (view.phase === 'paused') return;
   if (view.phase === 'ready') start();
   turn(game, dir);
+  wake();
 }
 
 window.addEventListener('keydown', (e) => {
@@ -227,7 +248,15 @@ function syncPause() {
   b.setAttribute('aria-disabled', String(view.phase === 'ready'));
   b.classList.toggle('en-pause', view.phase === 'paused');
 }
-document.addEventListener('visibilitychange', () => { if (document.hidden) pause(false); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    pause(false);
+    cancelAnimationFrame(raf);
+    raf = 0;
+    return;
+  }
+  wake();
+});
 
 // Balayage sur le plateau (seuil 24 px) ; touch-action: none sur le plateau seulement.
 let p0 = null;
@@ -270,6 +299,7 @@ $('oSon').addEventListener('click', toggleSound);
 
 // Options
 function renderOptions() {
+  wake();
   $('oVib').setAttribute('aria-checked', String(options.vib));
   $('oVib').textContent = options.vib ? 'Activées' : 'Coupées';
   $('oNote').value = options.notation;
@@ -405,8 +435,8 @@ $('resetYes').addEventListener('click', () => {
 const autosave = () => { if (!resetting) save(window.localStorage, state); };
 setInterval(autosave, 15000);
 // le taux « pièces/s » et « Rentabilisé en » vieillissent même sans pomme
-setInterval(() => { if (view.phase === 'running') refresh(); }, 2000);
+setInterval(() => { if (view.phase === 'running' && !document.hidden) refresh(); }, 2000);
 window.addEventListener('beforeunload', autosave);
 renderSound(); renderOptions();
 unlock(); refresh(); renderAchievements(state);
-requestAnimationFrame(frame);
+wake();
