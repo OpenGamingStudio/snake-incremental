@@ -21,6 +21,7 @@
   <h1 class="logo-mot">Snake Incremental</h1>
   <button id="pauseBtn" class="btn btn-ico" aria-label="Pause" aria-pressed="false"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path class="p-pause" d="M6 4h4v16H6zM14 4h4v16h-4z"/><path class="p-play" d="M7 3l13 9-13 9z"/></svg></button>
   <button id="mute" class="btn btn-ico" aria-label="Son" aria-pressed="true"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l6-5v16l-6-5H3z"/><path class="onde" d="M16 8.5h2.5v7H16z"/><path class="onde" d="M20 6h2v12h-2z"/><path class="barre" d="M15 9.4 16.4 8 23 14.6 21.6 16z"/></svg></button>
+  <button id="wardBtn" class="btn btn-ico" aria-label="Garde-robe" aria-haspopup="dialog"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v3H3z"/><path d="M6 17l1.5-9h9L18 17z"/><path d="M9.5 6h5v2h-5z"/></svg></button>
   <button id="optBtn" class="btn btn-ico" aria-label="Options" aria-haspopup="dialog"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v3H3zM3 10.5h18v3H3zM3 16h18v3H3z"/><path class="curseur" d="M6 3.5h4v6H6zM14 9h4v6h-4zM8 14.5h4v6H8z"/></svg></button>
 </header>
 
@@ -41,6 +42,7 @@
         <div class="carton">
           <p id="voileTitre" class="carton-titre">Snake Incremental</p>
           <p id="voileTexte" class="carton-texte">Flèches, ZQSD ou balayez pour diriger.</p>
+          <p class="carton-ver">v<span id="verCarton"></span></p>
           <button id="voileBtn" class="btn btn-fort">Jouer</button>
         </div>
       </div>
@@ -101,6 +103,20 @@
   </div>
 </dialog>
 
+<dialog id="dlgWardrobe" class="dlg" aria-labelledby="dlgWardrobeT">
+  <h2 id="dlgWardrobeT" class="dlg-titre">Garde-robe</h2>
+  <canvas id="wScene" class="w-scene" width="320" height="128" role="img" aria-label="Aperçu de votre serpent avec la tenue essayée"></canvas>
+  <div id="wTabs" class="filtre w-tabs" role="group" aria-label="Catégorie"></div>
+  <div id="wTiles" class="w-tuiles"></div>
+  <p class="w-ligne"><strong id="wNom"></strong><span id="wCoins" class="raison"></span></p>
+  <p class="raison">Touchez un article pour l'essayer sur le serpent, puis achetez-le avec vos pièces. Vos achats restent après « Recommencer plus fort ».</p>
+  <p id="wNote" class="raison" role="status"></p>
+  <div class="dlg-actions">
+    <button id="wAction" class="btn">Porter</button>
+    <button id="wClose" class="btn">Fermer</button>
+  </div>
+</dialog>
+
 <dialog id="dlgOptions" class="dlg" aria-labelledby="dlgOptionsT">
   <h2 id="dlgOptionsT" class="dlg-titre">Options</h2>
   <div class="options">
@@ -125,6 +141,7 @@
     <p id="keyMsg" class="raison" role="status"></p>
     <div class="option"><span></span><button id="keysReset" class="btn">Touches par défaut</button></div>
   </div>
+  <p class="raison">Snake Incremental v<span id="ver"></span></p>
   <div class="dlg-actions">
     <button id="optClose" class="btn btn-fort">Fermer</button>
   </div>

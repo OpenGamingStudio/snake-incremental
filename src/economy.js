@@ -1,4 +1,6 @@
 // Économie : améliorations, coûts, combo, prestige, succès. Logique pure.
+import { defaultEquip } from './cosmetics.js';
+
 export const UPGRADES = {
   speed: { name: 'Vitesse', desc: 'Le serpent avance plus vite', base: 15, growth: 1.35, max: 25 },
   value: { name: 'Valeur des pommes', desc: '+50 % de pièces par pomme', base: 10, growth: 1.3, max: 100 },
@@ -16,6 +18,7 @@ export function newState() {
     bestCombo: 0, bestLength: 3, stars: 0, prestiges: 0,
     levels: { speed: 0, value: 0, combo: 0, grid: 0, wrap: 0 },
     achievements: {}, muted: false,
+    owned: {}, equip: defaultEquip(), // cosmétiques achetés (« slot:id ») et portés
     lastSeen: 0, idleRate: 0, // ms de la dernière visite, pièces/s récentes (gain hors-ligne)
   };
 }
@@ -83,7 +86,7 @@ export function prestige(state) {
   if (gain < 1) return 0;
   const keep = { totalEarned: state.totalEarned, apples: state.apples, deaths: state.deaths,
     bestCombo: state.bestCombo, bestLength: state.bestLength, achievements: state.achievements,
-    muted: state.muted, stars: state.stars + gain, prestiges: state.prestiges + 1 };
+    muted: state.muted, owned: state.owned, equip: state.equip, stars: state.stars + gain, prestiges: state.prestiges + 1 };
   Object.assign(state, newState(), keep);
   return gain;
 }
@@ -104,6 +107,7 @@ export const ACHIEVEMENTS = [
   { id: 'd1', name: 'Ça arrive aux meilleurs', test: (s) => s.deaths >= 1 },
   { id: 'p1', name: 'Première étoile', test: (s) => s.prestiges >= 1 },
   { id: 'p2', name: '10 étoiles', test: (s) => s.stars >= 10 },
+  { id: 'k1', name: 'Première tenue', test: (s) => Object.keys(s.owned).length >= 1 },
 ];
 
 // Débloque les succès atteints ; retourne la liste des nouveaux.

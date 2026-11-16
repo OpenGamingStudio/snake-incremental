@@ -8,6 +8,8 @@ import { ACTIONS, LABELS, DEFAULT_KEYS, actionFor, assign, cloneKeys, sanitizeKe
 import { fmtCount, fmtFull, fmtDuration } from './format.js';
 import { offlineGain } from './offline.js';
 import { swipeDir } from './swipe.js';
+import { VERSION } from './version.js';
+import { initWardrobe } from './wardrobe.js';
 import { draw, fitCanvas, renderStats, renderShop, renderPrestige, prestigeSummary, renderAchievements,
   setFilter, flyGain, rewardBuy, rewardCombo, toast, announce, prefs, resetPalette } from './ui.js';
 
@@ -228,7 +230,7 @@ function frame(now) {
   syncPause();
   if (changed) {
     fitCanvas(canvas);
-    draw(canvas, game, view);
+    draw(canvas, game, view, state.equip, now);
   }
   if (view.phase === 'running' || dirty) raf = requestAnimationFrame(frame);
 }
@@ -404,6 +406,11 @@ $('dlgOptions').addEventListener('close', () => { capturing = null; $('keyMsg').
 $('keysReset').addEventListener('click', () => { options.keys = cloneKeys(DEFAULT_KEYS); capturing = null; saveOptions(); renderKeys(); $('keyMsg').textContent = 'Touches par défaut rétablies.'; });
 
 function openDialog(dlg) { pause(false); dlg.showModal(); }
+$('ver').textContent = VERSION;
+$('verCarton').textContent = VERSION;
+const wardrobe = initWardrobe({ state, sfx, calme: () => options.calme === 'on' || window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  onChange(text) { announce(text); unlock(); persist(); refresh(); } });
+$('wardBtn').addEventListener('click', () => { openDialog($('dlgWardrobe')); wardrobe.open(); });
 $('optBtn').addEventListener('click', () => openDialog($('dlgOptions')));
 $('optClose').addEventListener('click', () => $('dlgOptions').close());
 $('oVol').addEventListener('input', (e) => { options.volume = Number(e.target.value); saveOptions(); renderOptions(); });

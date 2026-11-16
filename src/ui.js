@@ -1,6 +1,7 @@
 // Interface : rendu canvas, compteur, registre, prestige, succès, toasts.
 import { UPGRADES, ACHIEVEMENTS, upgradeCost, canBuy, stepMs, appleBase, comboBonus, comboMult,
   starMult, prestigeGain, gridSize, nextAffordable } from './economy.js';
+import { drawSnake, drawApple } from './render.js';
 import { fmtShort, fmtCount, fmtDuration, fmtFull } from './format.js';
 
 const $ = (id) => document.getElementById(id);
@@ -14,7 +15,7 @@ const short = (n) => fmtShort(n, prefs.sci);
 
 // Couleurs lues dans les variables CSS de :root (identité unique dans src/css/input.css).
 let palette = null;
-function colors() {
+export function colors() {
   if (!palette) {
     const cs = getComputedStyle(document.documentElement);
     const v = (n) => cs.getPropertyValue(n).trim();
@@ -33,7 +34,7 @@ export function fitCanvas(canvas) {
   if (canvas.width !== side) { canvas.width = side; canvas.height = side; }
 }
 
-export function draw(canvas, game, view) {
+export function draw(canvas, game, view, loadout, now) {
   const ctx = canvas.getContext('2d');
   const c = colors();
   const px = canvas.width;
@@ -47,37 +48,9 @@ export function draw(canvas, game, view) {
     ctx.fillRect(Math.round(i * cell), 0, line, px);
     ctx.fillRect(0, Math.round(i * cell), px, line);
   }
-  const edge = Math.max(2, Math.round(cell * 0.09));
-  if (game.apple) {
-    ctx.fillStyle = c.apple;
-    ctx.beginPath();
-    ctx.arc((game.apple.x + 0.5) * cell, (game.apple.y + 0.5) * cell, cell * 0.36, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.lineWidth = edge; ctx.strokeStyle = c.ink; ctx.stroke();
-  }
-  const body = view.combo > 1 ? c.hot : c.snake;
-  // serpent : cases pleines à contour encre ; tête = carré encre intérieur et deux yeux
-  game.snake.forEach((seg, i) => {
-    const x = seg.x * cell, y = seg.y * cell;
-    ctx.fillStyle = c.ink;
-    ctx.fillRect(x, y, cell, cell);
-    ctx.fillStyle = body;
-    ctx.fillRect(x + edge, y + edge, cell - 2 * edge, cell - 2 * edge);
-    if (i === 0) {
-      ctx.fillStyle = c.ink;
-      const m = cell * 0.22;
-      ctx.fillRect(x + m, y + m, cell - 2 * m, cell - 2 * m);
-      ctx.fillStyle = c.paper;
-      const e = Math.max(2, cell * 0.14);
-      ctx.fillRect(x + cell * 0.3, y + cell * 0.36, e, e);
-      ctx.fillRect(x + cell * 0.7 - e, y + cell * 0.36, e, e);
-    } else if (view.combo > 1) {
-      // combo actif : un point au centre des cases, l'information ne repose pas sur la couleur seule
-      ctx.fillStyle = c.ink;
-      const m = cell * 0.4;
-      ctx.fillRect(x + m, y + m, cell - 2 * m, cell - 2 * m);
-    }
-  });
+  const t = reduced() ? 0 : now / 1000;
+  if (game.apple) drawApple(ctx, loadout.apple, (game.apple.x + 0.5) * cell, (game.apple.y + 0.5) * cell, cell, c, t);
+  drawSnake(ctx, game.snake, cell, game.dir, loadout, t, c, view.combo);
 }
 
 // Compteur : un caractère par boîte de largeur fixe, la largeur ne bouge pas à nombre de chiffres égal.
