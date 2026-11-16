@@ -257,3 +257,14 @@
 :root[data-daltonien] .dlg::backdrop{background:rgb(238 243 248 / .85)}
 :root[data-daltonien] .btn[aria-disabled="true"]{border-style:dashed}
 @media (max-width:379.98px){.logo-mot{white-space:normal;font-size:.9375rem;line-height:1.05}}
+
+.w-scene{display:block;width:100%;aspect-ratio:5/2;margin:.6rem 0;background:var(--color-quadrille);border:3px solid var(--color-encre);border-radius:var(--radius-plateau)}
+.w-tabs{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem}
+.w-tuiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(5.5rem,1fr));gap:.5rem}
+.tuile{display:flex;flex-direction:column;align-items:center;gap:.1rem;min-height:44px;padding:.35rem .25rem;background:#fff;color:var(--color-encre);border:3px solid var(--color-encre);border-radius:var(--radius-bouton);font-weight:600;font-size:var(--text-note);line-height:1.15;text-align:center}
+.tuile[aria-pressed="true"]{background:var(--color-miel);box-shadow:var(--shadow-dure)}
+.tuile-cv{width:100%;max-width:72px;aspect-ratio:1}
+.tuile-etat{font-weight:500}
+.w-ligne{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.25rem .75rem;margin-top:.8rem}
+.carton-ver{margin-top:.5rem;font-size:var(--text-note);color:var(--color-mine)}
+.w-tabs .btn{flex:1 1 0;padding:0 .4rem;min-width:0}

@@ -1,5 +1,6 @@
 // Sauvegarde localStorage, tolérante aux données absentes ou corrompues.
 import { newState, UPGRADES, ACHIEVEMENTS } from './economy.js';
+import { ITEMS, SLOTS, isOwned, findItem } from './cosmetics.js';
 
 export const SAVE_KEY = 'snake-incremental-v1';
 
@@ -10,7 +11,7 @@ export function sanitize(raw) {
   const base = newState();
   if (!raw || typeof raw !== 'object') return base;
   for (const k of Object.keys(base)) {
-    if (k === 'levels' || k === 'achievements') continue;
+    if (k === 'levels' || k === 'achievements' || k === 'owned' || k === 'equip') continue;
     if (typeof raw[k] === typeof base[k] && (typeof raw[k] !== 'number' || Number.isFinite(raw[k]))) base[k] = typeof raw[k] === 'number' ? Math.min(Math.max(raw[k], 0), MAX_NUM) : raw[k];
   }
   if (raw.levels && typeof raw.levels === 'object') {
@@ -21,6 +22,15 @@ export function sanitize(raw) {
   }
   if (raw.achievements && typeof raw.achievements === 'object') {
     for (const a of ACHIEVEMENTS) if (raw.achievements[a.id] === true) base.achievements[a.id] = true;
+  }
+  if (raw.owned && typeof raw.owned === 'object') {
+    for (const slot of SLOTS) for (const it of ITEMS[slot]) if (raw.owned[`${slot}:${it.id}`] === true) base.owned[`${slot}:${it.id}`] = true;
+  }
+  if (raw.equip && typeof raw.equip === 'object') {
+    for (const slot of SLOTS) {
+      const id = raw.equip[slot];
+      if (typeof id === 'string' && findItem(slot, id) && isOwned(base, slot, id)) base.equip[slot] = id;
+    }
   }
   return base;
 }
