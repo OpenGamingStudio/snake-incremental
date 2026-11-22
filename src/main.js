@@ -2,7 +2,7 @@
 import { createGame, step, turn } from './engine.js';
 import { buy, appleValue, earn, gridSize, stepMs, hasWrap, COMBO_WINDOW_STEPS,
   checkAchievements, prestige, UPGRADES } from './economy.js';
-import { load, save, SAVE_KEY } from './save.js';
+import { load, save, sanitize, SAVE_KEY } from './save.js';
 import { sfx, setMuted, setVolume } from './audio.js';
 import { ACTIONS, LABELS, DEFAULT_KEYS, actionFor, assign, cloneKeys, sanitizeKeys, keyName } from './keys.js';
 import { fmtCount, fmtFull, fmtDuration } from './format.js';
@@ -87,6 +87,7 @@ function refresh() {
   renderShop(state, onBuy, r, view.combo);
   renderPrestige(state);
   canvas.classList.toggle('traverse', hasWrap(state));
+  window.OGSAccount?.show(view.phase !== 'running'); // le bouton compte se cache pendant la partie
 }
 
 function unlock() {
@@ -483,3 +484,19 @@ const welcome = claimOffline();
 unlock(); refresh(); renderAchievements(state);
 if (welcome) { card('Bon retour !', welcome, 'Jouer'); persist(); }
 wake();
+
+// Compte OpenGamingStudio (facultatif) : la progression suit le joueur sur tous ses appareils.
+window.OGSAccount?.init({
+  game: 'snake-incremental', version: VERSION, color: '#ffc93c', anchor: 'bottom-left', offset: [8, 8],
+  getSave: () => state,
+  applySave: (data) => {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return;
+    Object.assign(state, sanitize(data));
+    setMuted(state.muted);
+    persist();
+    if (view.phase !== 'running') resetSnake();
+    unlock(); refresh(); renderAchievements(state); renderSound();
+  },
+  isEmpty: (s) => !s || !(s.totalEarned > 0 || s.apples > 0 || s.prestiges > 0),
+  describe: (s) => `${fmtCount(s?.totalEarned || 0)} pièces gagnées · ${s?.stars || 0} étoiles · record de longueur ${s?.bestLength || 0}`,
+});

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Snake Incremental</title>
 <meta name="description" content="Snake Incremental, un jeu web open source d'OpenGamingStudio : mange des pommes, améliore ton serpent, recommence plus fort.">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src https://api.opengamingstudio.com; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="theme-color" content="#2E9E4A">
 <meta name="referrer" content="no-referrer">
 <link rel="icon" href="favicon.ico" sizes="32x32">
@@ -148,6 +148,7 @@
 </dialog>
 
 <div id="toasts" class="toasts" role="status"></div>
+<script src="account.js" defer></script>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>
